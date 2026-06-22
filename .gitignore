@@ -1,0 +1,11 @@
+node_modules
+vendor
+.vscode
+.env
+storage/framework/cache/
+storage/logs/
+storage/framework/sessions/
+storage/framework/views/
+storage/framework/laravel-excel/
+storage/framework/cache/
+directagroupingsoftware-51fef28451b7.json

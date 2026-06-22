@@ -1,0 +1,204 @@
+@extends('layouts.main')
+@section('title','Agregar Venta')
+@section('content')
+<!-- begin:: Subheader -->
+<div class="kt-subheader   kt-grid__item" id="kt_subheader">
+    <div class="kt-container ">
+        <div class="kt-subheader__main">
+            <h3 class="kt-subheader__title">
+                Concentra </h3>
+            <div class="kt-subheader__breadcrumbs">
+                <a href="#" class="kt-subheader__breadcrumbs-home"><i class="fa fa-cart-arrow-down"></i></a>
+                <span class="kt-subheader__breadcrumbs-separator"></span>
+                <a href="" class="kt-subheader__breadcrumbs-link">
+                    Ventas </a>
+                <span class="kt-subheader__breadcrumbs-separator"></span>
+                <a href="" class="kt-subheader__breadcrumbs-link">
+                    Agregar </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end:: Subheader -->
+<div class="kt-container  kt-grid__item kt-grid__item--fluid">
+
+    <!--begin::Portlet-->
+    <div class="row">
+        <div class="col-lg-12">
+
+            <!--begin::Portlet-->
+            <div class="kt-portlet">
+                <div class="kt-portlet__head">
+                    <div class="kt-portlet__head-label">
+                        <h3 class="kt-portlet__head-title">
+                            Registrar Nueva Venta
+                        </h3>
+                    </div>
+                </div>
+                <!--begin::Form-->
+                {!! Form::open(['route' => 'concentra.ventas.guardar','method' => 'post','id' => 'create-sale','class' => 'kt-form kt-form--label-right']) !!}
+                <input type="hidden" name="_token" value="{{ csrf_token() }}" id="token">
+                <div class="kt-portlet__body">
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">DN Cliente *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('dn',null,['class' => 'form-control numero required','id' => 'dn','maxlength' => '10','minlength' => '10']) !!}
+                        </div>
+                    </div>
+                    <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Titularidad *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                           {{ Form::select('titularidad', ['' => '[Seleccione]','SI' => 'SI','NO' => 'NO'], null, ['id' => 'titularidad','class' => 'select form-control required']) }}
+                        </div>
+                    </div>-->
+                     <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Tipo de Linea *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                           {{ Form::select('tipo_linea', ['' => '[Seleccione]','Recarga' => 'Recarga','Plan de Renta' => 'Plan de Renta'], null, ['id' => 'tipo_linea','class' => 'select form-control required']) }}
+                        </div>
+                    </div>-->
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Recarga *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                           {{ Form::select('recarga', ['' => '[Seleccione]','50$' => '50$','100$' => '100$'], null, ['id' => 'recarga','class' => 'select form-control required']) }}
+                        </div>
+                    </div>
+                    <!-- <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Liberado *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                           {{ Form::select('liberado', ['' => '[Seleccione]','SI' => 'SI','NO' => 'NO'], null, ['id' => 'liberado','class' => 'select form-control required']) }}
+                        </div>
+                    </div>-->
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Nombre y Apellido Cliente *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('nombre_cliente',null,['class' => 'form-control','id' => 'nombre_cliente',]) !!}
+                        </div>
+                    </div>
+                     <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Sexo *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                           {{ Form::select('sexo', ['' => '[Seleccione]','M' => 'M','F' => 'F'], null, ['id' => 'sexo','class' => 'select form-control required']) }}
+                        </div>
+                    </div>-->
+                     <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Fecha de Nacimiento *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('fechaNacimiento',null,['class' => 'form-control datefree','id' => 'fechaNacimiento']) !!}
+                        </div>
+                    </div>
+                      <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Entidad Nacimiento *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('entidad_nacimiento',null,['class' => 'form-control required','id' => 'entidad_nacimiento',]) !!}
+                        </div>
+                    </div>-->
+                   <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">CURP *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('curp',null,['class' => 'form-control','id' => 'curp']) !!}
+                        </div>
+                    </div>
+                     <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Centro de Atenci&oacute;n *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('centro_atencion',null,['class' => 'form-control required','id' => 'centro_atencion']) !!}
+                        </div>
+                    </div>-->
+                     <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">DN Contacto Alterno *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('dn_alterno',null,['class' => 'form-control numero','id' => 'dn_alterno']) !!}
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">DN Contacto Alterno 2 *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('dn_alterno2',null,['class' => 'form-control numero','id' => 'dn_alterno2']) !!}
+                        </div>
+                    </div>
+                     <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Correo Electronico *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('email',null,['class' => 'form-control','id' => 'email']) !!}
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">NIP *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('nip',null,['class' => 'form-control','id' => 'nip']) !!}
+                        </div>
+                    </div>
+                  
+                    <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Fecha de la Venta *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('fechaVenta',null,['class' => 'form-control dater required','id' => 'fechaVenta']) !!}
+                        </div>
+                    </div>-->
+                      <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Folio de la Venta *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {!! Form::text('folio_venta',null,['class' => 'form-control','id' => 'folio_venta']) !!}
+                        </div>
+                    </div>
+                  @if(isset(Auth::user()->personal) && Auth::user()->personal->cargo->nombre_cargo == 'Validador')
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Tipificaci&oacute;n 1 *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {{ Form::select('tipificacion1', $tipificacion1, null, ['id' => 'tipificacion1','data-href'=>route('concentra.selectipificacion2'),'class' => 'select form-control','placeholder' => '[Seleccione]']) }}
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Tipificaci&oacute;n 2 *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {{ Form::select('tipificacion2', [], null, ['id' => 'tipificacion2','class' => 'select form-control']) }}
+                        </div>
+                    </div>
+                    @endif
+                    @if(isset(Auth::user()->personal) && Auth::user()->personal->cargo->nombre_cargo == 'Supervisor')
+                    <input type="hidden" name="tipificacion2" id="tipificacion2" value="2"/>
+                    @endif
+                    @if(isset(Auth::user()->personal) && Auth::user()->personal->cargo->nombre_cargo == 'Validador')
+                    <input type="hidden" name="validador" id="validador" value="{{Auth::user()->personal->id}}"/>
+                    @endif
+                     <div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Ejecutivo a Cargo *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {{ Form::select('ejecutivo', $ejecutivos, null, ['id' => 'ejecutivo','class' => 'select form-control required','placeholder' => '[Seleccione]']) }}
+                        </div>
+                    </div>
+                    <!--<div class="form-group row">
+                        <label class="col-form-label col-lg-3 col-sm-12">Validador *</label>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            {{ Form::select('validador', $validadores, null, ['id' => 'validador','class' => 'select form-control','required','placeholder' => '[Seleccione]']) }}
+                        </div>
+                    </div> -->                 
+                </div>
+                <div class="kt-portlet__foot">
+                    <div class="kt-form__actions">
+                        <div class="row">
+                            <div class="col-lg-9 ml-lg-auto">
+                                <button type="submit" class="btn btn-brand">Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {!! Form::close() !!}
+                <!--end::Form-->
+            </div>
+
+            <!--end::Portlet-->
+        </div>    
+    </div>
+</div>
+
+@endsection
+@push('styles')
+<!--Custom Style-->
+
+@endpush
+@push('scripts')
+{!!Html::script('js/jquery-number/jquery.number.min.js')!!}
+{!! Html::script("js/concentra/agregarVenta.js") !!}
+@endpush

@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /discovery/
+
+    # Redirige solo si está en la raíz exacta
+    RewriteCond %{REQUEST_URI} ^/discovery/?$
+    RewriteRule ^$ public/ [R=301,L]
+</IfModule>
