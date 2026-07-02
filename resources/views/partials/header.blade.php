@@ -237,6 +237,54 @@ $nombre = $arrName[0];
                         </div>
                     </li>   
                    @endpermission
+                    <li class="kt-menu__item  kt-menu__item--submenu kt-menu__item--rel @if(in_array($ruta[0], ['renovaciones'])) kt-menu__item--open kt-menu__item--here @endif" data-ktmenu-submenu-toggle="click" aria-haspopup="true">
+                            <a href="javascript:;" class="kt-menu__link kt-menu__toggle">
+                                <span class="kt-menu__link-text">Renovaciones </span>
+                                <i class="kt-menu__ver-arrow la la-angle-right"></i>
+                            </a>
+                           <div class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--left" style="width: 220px">
+                            <ul class="kt-menu__subnav"> 
+                                <!--sub categoria dentro del menu-->
+                            
+                                <li class="kt-menu__item  kt-menu__item--submenu  @if(in_array($ruta[0], ['renovaciones']) && in_array($ruta[1], ['index'])) 
+                                    kt-menu__item--open kt-menu__item--here @endif" data-ktmenu-submenu-toggle="hover" aria-haspopup="true">
+                                    <a href="javascript:;" class="kt-menu__link kt-menu__toggle">
+                                        <span class="kt-menu__link-icon"><i class="fa fa-cart-arrow-down"></i></span>
+                                        <span class="kt-menu__link-text">Ventas</span><i class="kt-menu__hor-arrow la la-angle-right"></i>
+                                        <i class="kt-menu__ver-arrow la la-angle-right"></i>
+                                    </a>
+
+                                      <div class="kt-menu__submenu kt-menu__submenu--classic kt-menu__submenu--right" style="width: 220px">
+                                            <!--3re nivel categoria dentro del menu-->
+                                        <ul class="kt-menu__subnav">                                                                                 
+                                            <li class="kt-menu__item @if($rutaMain == 'renovaciones.create') kt-menu__item--open kt-menu__item--here @endif" aria-haspopup="true">
+                                                <a href="{{ route('renovaciones.create')}}" class="kt-menu__link ">
+                                                    <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
+                                                    <span class="kt-menu__link-text">Agregar</span>
+                                                </a>
+                                            </li>                                           
+                                            <li class="kt-menu__item @if($rutaMain == 'renovaciones.index') kt-menu__item--open kt-menu__item--here @endif" aria-haspopup="true">
+                                                <a href="{{ route('renovaciones.index')}}" class="kt-menu__link ">
+                                                    <i class="kt-menu__link-bullet kt-menu__link-bullet--dot"><span></span></i>
+                                                    <span class="kt-menu__link-text">Registradas</span>
+                                                </a>
+                                            </li>    
+                                        </ul>
+                                    </div>
+                                </li> 
+                              
+                                
+                             
+                                <li class="kt-menu__item @if($rutaMain == 'bait.reportes.index') kt-menu__item--open kt-menu__item--here @endif" aria-haspopup="true">
+                                    <a href="" class="kt-menu__link ">
+                                            <span class="kt-menu__link-icon"><i class="fa fa-download"></i></span>
+                                        <span class="kt-menu__link-text">Reportes</span>
+                                    </a>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                    </li> 
                     @permission('configuracion.module')
                     <li class="kt-menu__item  kt-menu__item--submenu kt-menu__item--rel  @if(in_array($ruta[0], ['permisos','roles','user'])) kt-menu__item--open kt-menu__item--here @endif" data-ktmenu-submenu-toggle="click" aria-haspopup="true"><a href="javascript:;" class="kt-menu__link kt-menu__toggle"><span class="kt-menu__link-text">Configuraci&oacute;n</span><i class="kt-menu__ver-arrow la la-angle-right"></i></a>
                         <div class="kt-menu__submenu  kt-menu__submenu--fixed kt-menu__submenu--center" style="width:600px">

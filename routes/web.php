@@ -11,9 +11,12 @@ use App\Http\Controllers\LoginController;
 #no se declara la ruta completa, el resource ya construye hasta controller la ruta de acceso#
 use \Claro\MasivosController as ClaroMasivos;
 use \Claro\PymesController as ClaroPymes;
+
 use App\Http\Controllers\Bait\BaitController;
 use App\Http\Controllers\Bait\Backoffice;
 use App\Http\Controllers\Bait\UploadsController;
+
+use App\Http\Controllers\Renovaciones\RenovacionesController; 
 #Controllador de Google Sheet Api
 use App\Http\Controllers\Api\GoogleApi;
 
@@ -171,6 +174,20 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
         #reportes
         Route::get('bait/reportes',             'IndexReportes')->middleware('permission:bait.reportes')->name('bait.reportes.index');
         Route::post('bait/reportes/download',   'DownloadReportes')->name('bait.reportes.download');
+    });
+
+     Route::controller(RenovacionesController::class)->group(function () {
+        #carga de seguimientos masivos
+        Route::get('renovaciones/create',             'create')->name('renovaciones.create');
+        Route::post('renovaciones/store',             'store')->name('renovaciones.store');
+        Route::post("renovaciones/check/dn",            "checkOrderOnix")->name("renovaciones.check.dn");
+
+        Route::get('renovaciones/index',             'index')->name('renovaciones.index');
+        Route::post('renovaciones/search',           'search')->name('renovaciones.search');
+        Route::get('renovaciones/edit/{id}',         'edit')->name('renovaciones.edit');
+        Route::put('renovaciones/{id}/update',       'update')->name('renovaciones.update');
+        Route::delete('renovaciones/{id}/delete',    'delete')->name('renovaciones.delete');
+
     });
 
     Route::get('google/api',        [GoogleApi::class, 'show'])->name('google.api');
