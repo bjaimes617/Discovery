@@ -223,7 +223,7 @@ class Backoffice extends Controller
             $folio              = null;
             $estatus_intelix    = $request->estatus_intelix;
             $observaciones      = $request->observacionesAudit;
-            $autorizar          = $estatus == 3 ? 1 : null;
+            $autorizar          = null;
         }
 
         try {

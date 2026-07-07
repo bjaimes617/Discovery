@@ -393,6 +393,7 @@ $("#baitSearch").validate({
                         { mData: "idcontacto" },
                         { mData: "identificador" },
                         { mData: "nombreapellido" },
+                        { mData: "intelix" },
                         { mData: "ciclo_vida" },
                         { mData: "agente" },
                         { mData: "supervisor" },

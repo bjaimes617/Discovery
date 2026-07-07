@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 use App\Models\bait\BaitRespondio;
@@ -12,7 +12,6 @@ use App\Models\bait\BaitVentas;
 use App\Models\Personal;
 use App\Models\User;
 use Carbon\Carbon;
-use Auth;
 use DivisionByZeroError;
 
 class DashboardController extends Controller
@@ -54,6 +53,12 @@ class DashboardController extends Controller
         $usuariosrespond = array();
         $conversacionnueva = 0;
         $data   =  BaitRespondio::whereBetween('created_at', [$inicio, $fin])->cursor();
+        $cargo = "";
+
+        ///validamos si la persona tiene ficha de personal
+        if (Auth::user()->ficha_personal == "Si") {
+            $cargo = Auth::user()->personal->cargo->nombre_cargo;
+        }
 
         ##Extraemos todos los ciclos de vida existentes
         $data->each(function ($item) use (&$ciclos, &$usuariosrespond) {
@@ -67,15 +72,36 @@ class DashboardController extends Controller
             }
         });
 
+        // Validar el rol del usuario para restringir las métricas
+        switch ($cargo):
+            case 'Supervisor':
+                // Si es Supervisor, obtenemos únicamente las cédulas de los asesores a su cargo
+                $usuariosrespond = Personal::where("jefe_inmediato_id", "=", Auth::user()->personal->id)
+                    ->pluck("numero_empleado")->toArray();
+                // Bandera para aplicar filtros adicionales en las consultas SQL
+                $solosusventas = true;
+                break;
+            default:
+                // Para otros roles (como Admin), se mostrarán las métricas de todos los asesores
+                $solosusventas = false;
+                break;
+        endswitch;
+
         usort($ciclos, function ($a, $b) {
             return strcmp($a, $b);
         });
 
         #totalventas registradas
-        $countventas = BaitVentas::leftJoin('personal', 'bait_ventas.personal_id', 'personal.id')
-            ->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();
+        $sql = BaitVentas::leftJoin('personal', 'bait_ventas.personal_id', 'personal.id');
 
-        ##total Ingresadas a Intelix
+        // Filtramos las ventas: solo las del equipo si es supervisor, o todas si no lo es
+        if ($solosusventas) {
+            $countventas = $sql->where("supervisor_id", Auth::user()->personal->id)->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();
+        } else {
+            $countventas = $sql->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();
+        }
+
+        #total Ingresadas a Intelix
         $ingresadas          = $countventas->where('estatus_id', 2)->count();
         $fvc24               = $countventas->where('fvc', 24)->count();
         $fvc48               = $countventas->where('fvc', 48)->count();
@@ -86,7 +112,20 @@ class DashboardController extends Controller
         $sumaventascargadas = array_sum($totalventascargadas);
 
         #totalizacion de ciclos de_vida
-        $totalciclos = db::table('bait_respondio')->selectRaw('count(id) as total, ciclo_de_vida')->wherein('ciclo_de_vida', $ciclos)->whereBetween('created_at', [$inicio, $fin])->groupBy('ciclo_de_vida')->cursor()->pluck('ciclo_de_vida', 'total')->toarray();
+        $queryCiclos = db::table('bait_respondio')
+            ->selectRaw('count(id) as total, ciclo_de_vida')
+            ->wherein('ciclo_de_vida', $ciclos)
+            ->whereBetween('created_at', [$inicio, $fin])
+            ->groupBy('ciclo_de_vida');
+
+        // Si es supervisor, cruzamos la primera palabra del string 'usuario' (que es la cédula) 
+        // con nuestro array de asesores ($usuariosrespond) para contar solo sus métricas
+        if ($solosusventas) {
+            $queryCiclos->whereIn(DB::raw("SUBSTRING_INDEX(usuario, ' ', 1)"), $usuariosrespond);
+        }
+
+        // Formateamos el resultado de forma clave => valor usando total y ciclo de vida
+        $totalciclos = $queryCiclos->cursor()->pluck('ciclo_de_vida', 'total')->toarray();
 
         #totalizacion de leads asignados 
         $countleadsAsignados = db::table('bait_respondio')->selectRaw('count(id) as total, DATE(created_at) AS fecha, ciclo_de_vida, usuario')
@@ -95,12 +134,13 @@ class DashboardController extends Controller
             ->whereNotNull('usuario')
             ->groupByRaw('DATE(created_at), ciclo_de_vida, usuario')->get();
 
-        #arreglo con los datos del usuario
+        #arreglo con los datos del usuario para metricas
         $Datospersonales = Personal::leftjoin("personal as superv", "superv.id", "personal.jefe_inmediato_id")
             ->leftjoin("users as superv_users", "superv_users.id", "superv.user_id")
             ->leftjoin("users as user", "user.id", "personal.user_id")
             ->wherein("personal.numero_empleado", $usuariosrespond);
 
+        ///arrays con informacion de supers y agentes
         $personal       = $Datospersonales->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
         $super          = $Datospersonales->pluck("superv_users.nombre_apellido", "personal.numero_empleado")->toArray();
 
@@ -112,21 +152,38 @@ class DashboardController extends Controller
             $nombre = "No disponible";
             $cedula = array();
 
+            // Validamos a quién pertenece este lead asignado o respondido
             switch ($countrespondlead->usuario) {
                 case "Asesor Ventas IA":
                 case "1 IA DANIELA":
+                    // Los agentes IA no pertenecen al equipo de un supervisor, por lo que los ignoramos (continue)
+                    if ($cargo == "Supervisor") {
+                        continue 2;
+                    }
                     $cedula[0] = "Agente IA";
                     $nombre = $cedula[0];
                     break;
                 case null:
+                    // De igual forma, omitimos registros sin usuario para las métricas de supervisores
+                    if ($cargo == "Supervisor") {
+                        continue 2;
+                    }
                     $cedula[0] = "Sin Usuario";
                     $nombre = $cedula[0];
                     break;
-                case count(explode(" ", $countrespondlead->usuario)) < 3:
-                    $nombre = explode(" ", $countrespondlead->usuario)[0];
                 default:
                     $cedula = explode(" ", $countrespondlead->usuario);
-                    $nombre = array_key_exists($cedula[0], $personal) ? $personal[$cedula[0]] : "<span class='badge badge-warning'><b> No Registrer Discovery: " . $cedula[0] . "</b></span>";
+                    if ($cargo == "Supervisor") {
+                        // Si la cédula del lead no está en la lista de agentes del supervisor, la saltamos
+                        if (!in_array($cedula[0], $usuariosrespond)) {
+                            continue 2;
+                        }
+                        // Buscamos el nombre del asesor, si no existe mostramos una etiqueta de advertencia
+                        $nombre = array_key_exists($cedula[0], $personal) ? $personal[$cedula[0]] : "<span class='badge badge-warning'><b> No Registrer Discovery: " . $cedula[0] . "</b></span>";
+                    } else {
+                        // Para el resto de cargos (ej. Admin), mostramos el nombre del usuario sin importar si es de su equipo o no
+                        $nombre = array_key_exists($cedula[0], $personal) ? $personal[$cedula[0]] : "<span class='badge badge-warning'><b> No Registrer Discovery: " . $cedula[0] . "</b></span>";
+                    }
                     break;
             }
             if (!array_key_exists($cedula[0], $tablemetricas)) {
@@ -153,7 +210,6 @@ class DashboardController extends Controller
                 $tablemetricas[$cedula[0]]["conversion"]     += $leads_asignados;
             }
         }
-        // dd($tablemetricas);
         ### recalcular los porcentames de metas y conversiones de la tabla
         foreach ($tablemetricas as $key => $value) {
             if ($value["leads"] > 0) {

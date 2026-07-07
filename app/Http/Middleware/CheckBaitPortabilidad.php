@@ -19,10 +19,14 @@ class CheckBaitPortabilidad
     {
         $venta = BaitVentas::where('numero_portar', $request->numero_portabilidad)
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->get()->last();
 
         if ($venta) {
             $mesesTranscurridos = Carbon::parse($venta->created_at)->diffInMonths(Carbon::now());
+
+            if ($venta->estatus_id == 6) {
+                return $next($request);
+            }
 
             if ($mesesTranscurridos >= 3) {
                 return $next($request);

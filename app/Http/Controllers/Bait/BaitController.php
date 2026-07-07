@@ -56,6 +56,10 @@ class BaitController extends Controller
             $venta = $query->orderBy('created_at', 'desc')->first();
 
             if ($venta != null) {
+                if ($venta->estatus_id == 6) {
+                    return response()->json(true);
+                }
+
                 $mesesTranscurridos = Carbon::parse($venta->created_at)->diffInMonths(Carbon::now());
                 if ($mesesTranscurridos < 3) {
                     return response()->json(false);
@@ -69,7 +73,10 @@ class BaitController extends Controller
     public function index()
     {
         $cargo = "";
-        $user = ENV('DEV_USER_CHANGE', false) ? Auth::loginUsingId(2, true) : Auth::user();
+
+        $user = ENV('DEV_USER_CHANGE', false) ?
+            \Auth::loginUsingId(ENV('OTHER_USER_ID', false), true) :
+            \Auth::user();
 
         if ($user->ficha_personal == "Si")
             $cargo = $user->personal->cargo->nombre_cargo;
@@ -82,7 +89,7 @@ class BaitController extends Controller
                     ->orderBy('users.nombre_apellido')->get();
                 break;
             case 'Supervisor':
-                $supervisores = Personal::with(['RelationUser'])->select('personal.id', 'users.nombre_apellido')->where("personal.campana_id", "=", 3)
+                $supervisores = Personal::with(['RelationUser'])->select('personal.id', 'users.nombre_apellido')->where("personal.campana_id", "=",   $this->campania)
                     ->where("personal.cargo_id", "=", 4)->where('personal.id', '=', Auth::user()->personal->id)
                     ->join('users', 'personal.user_id', '=', 'users.id')
                     ->orderBy('users.nombre_apellido')->get();
@@ -190,6 +197,7 @@ class BaitController extends Controller
             $row["idcontacto"]      = $result->idcontacto;
             $row["fvc"]             = $result->fvc == 24 ? '<span class="badge badge-danger">' . $result->fvc . ' Horas</span>' : '<span class="badge badge-warning">' . $result->fvc . ' Horas</span>';
             $row["identificador"]   = $result->numero_portar;
+            $row["intelix"]   = $result->estatus_intelix;
             $row["nombreapellido"]  = $result->nombre_apellido;
             $row["agente"]          = $result->RelationUser != null ? $result->RelationUser->nombre_apellido : "N/D";
             $row["supervisor"]      = $result->supervisor_id != null ? $result->relationSupervisor->RelationUser->nombre_apellido : "N/D";
@@ -218,11 +226,12 @@ class BaitController extends Controller
                     $icon = '<i class="fas fa-exclamation-triangle"></i>';
 
                     if ($liberar && $result->autorizar == null || Auth::user()->hasPermission('bait.administrativo')) {
+
                         $editarhtml = Auth::user()->HasPermission('bait.edit') ?
                             '<a href="' . route('bait.edit', $result->id) . '" target="_blank" class="btn btn-sm btn-primary"  data-toggle="tooltip" data-placement="top" title="Editar Datos"><i class="fas fa-edit"></i></a>'
                             : null;
                     } else {
-                        $editarhtml = null;
+                        $editarhtml = "";
                     }
                     $deleteHtml = '<button type="button" class=" btn btn-sm btn-danger"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Rechazada" > 
                         ' . $icon . '</button>';
@@ -310,6 +319,7 @@ class BaitController extends Controller
             $venta->fecha_cita              = Carbon::createFromFormat('d/m/Y h:i A', $request->fecha_cita . ' ' . $request->hora_cita)->format('Y-m-d H:i:s');
             $venta->observaciones           = $request->observaciones;
             $venta->grupo_gestion           = $request->gestion;
+            $venta->autorizar = null;
             if (BaitRespondio::where('idcontacto', $request->idcontacto)->latest()->limit(1)->exists()) {
                 $venta->ciclo_vida = BaitRespondio::where('idcontacto', $request->idcontacto)->orderby('created_at', 'DESC')->limit(1)->first()->ciclo_de_vida;
             } else {
@@ -317,7 +327,11 @@ class BaitController extends Controller
             }
 
             if ($user->personal !== null) {
-                $supervisor     =  $user->personal->jefe_inmediato_id;
+                if ($user->personal->cargo_id == 4) {
+                    $supervisor     = $user->personal->id;
+                } else {
+                    $supervisor     = $user->personal->jefe_inmediato_id;
+                }
                 $coordinador    = $user->personal->jefe_inmediato_segundo_id;
                 $idPersonal     = $user->personal->id;
             } else {

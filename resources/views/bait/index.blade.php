@@ -86,6 +86,7 @@
                                     <th>ID Contacto</th>  
                                     <th>Numero Portabilidad</th>                                 
                                     <th>Nombre y Apellido</th>
+                                    <th>Estatus Intelix</th>
                                     <th>Ciclo de Vida</th>
                                     <th>Agente</th> 
                                     <th>Supervisor</th>
