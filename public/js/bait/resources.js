@@ -44,12 +44,7 @@ var KTFormControls = (function () {
                         },
                     },
                 },
-            },
-            messages: {
-                numero_portabilidad: {
-                    remote: "Este numero de Portabilidad Esta registrado hace menos de 3 meses.",
-                },
-            },
+            },           
             errorElement: "span",
             errorClass: "text-danger",
             //display error alert on form submit

@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Models\renovaciones\renovacionesVentasModel;
 use App\Models\renovaciones\renovacionesHistoricoModel;
+use App\Imports\Renovaciones\SeguimientosImports;
 use App\Models\Personal;
+
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RenovacionesController extends Controller
 {
@@ -132,7 +135,7 @@ class RenovacionesController extends Controller
             endswitch;
         }
 
-        if (Auth::user()->ficha_personal == "Si" || !Auth::user()->hasPermission('renovaciones.administrativo')) {
+        if (Auth::user()->ficha_personal == "Si" || Auth::user()->hasPermission('renovaciones.administrativo')) {
             $data = $sql->orderBy('created_at', 'DESC')->get();          
         }
       
@@ -150,7 +153,7 @@ class RenovacionesController extends Controller
                     break;
             endswitch;
 
-            if (Auth::user()->ficha_personal == "Si" || !Auth::user()->hasPermission('renovaciones.administrativo')) {
+            if (Auth::user()->ficha_personal == "Si" || Auth::user()->hasPermission('renovaciones.administrativo')) {
                 $data = $sql2->orderBy('created_at', 'DESC')->get();
              
             }
@@ -168,22 +171,22 @@ class RenovacionesController extends Controller
             $row["agente"]          = $result->RelationUser != null ? $result->RelationUser->nombre_apellido : "N/D";
             $row["supervisor"]      = $result->supervisor_id != null ? $result->relationSupervisor->RelationUser->nombre_apellido : "N/D";           
             $row["orden"]           = $result->numero_orden_onix;
-            $row["estatus"]         = '<span class="badge badge-info">' . $result->relationEstatus->descripcion . '</span>';
+            $row["estatus"]         = '<span class="badge badge-success">' . $result->relationEstatus->descripcion . '</span>';
             $vent = 'onclick="DestroyVentas(' . $result->id . '); "';
             switch ($result->estatus_id) {
                 case 1:
-                    $editarhtml = !Auth::user()->HasPermission('renovaciones.edit') ?
+                    $editarhtml = Auth::user()->HasPermission('renovaciones.edit') ?
                         '<a href="' . route('renovaciones.edit', $result->id) . '" target="_blank" class="btn btn-sm btn-primary"  data-toggle="tooltip" data-placement="top" title="Editar Datos"><i class="fas fa-edit"></i></a>'
                         : null;
 
-                    $deleteHtml = !Auth::user()->HasPermission('renovaciones.destroy') ?
+                    $deleteHtml = Auth::user()->HasPermission('renovaciones.delete') ?
                         '<button type="button"  ' . $vent . ' class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="top" title="Remover" ><i class="fa fa-trash"</i></button>'
                         : null;
                     break;                
                 default:
                     $row["estatus"] = '<span class="badge badge-info">' . $result->relationEstatus->descripcion . '</span>';
                     $histotoque         = $histotoque->orderby('id', 'desc')->first();
-                    $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Observaciones: " . $histotoque->observaciones : "N/D";
+                    $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Comentarios: " . $histotoque->observaciones . "\n Observacion: ".$histotoque->relationObservaciones->descripcion : "N/D";
                     $icon = '<i class="fas fa-info-circle"></i>';
                     $editarhtml = "";
                     $deleteHtml = '<button type="button" class=" btn btn-sm btn-primary"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
@@ -201,7 +204,7 @@ class RenovacionesController extends Controller
 
         usort($arreglo, function ($a, $b) {
             // Comparar por cedula (numérico)
-            $datos = strcmp($a['fvc'], $b['fvc']);
+            $datos = strcmp($a['creado'], $b['creado']);
             return $datos;
         });
 
@@ -235,8 +238,12 @@ class RenovacionesController extends Controller
         $venta->referencias     =  mb_strtoupper(strtolower($request->referencia));
         $venta->observaciones   =  mb_strtoupper(strtolower($request->observaciones));
         
-         if ($user->personal !== null) {
-                $supervisor     =  $user->personal->jefe_inmediato_id;
+            if ($user->personal !== null) {
+                if ($user->personal->cargo_id == 4) {
+                    $supervisor     = $user->personal->id;
+                } else {
+                    $supervisor     = $user->personal->jefe_inmediato_id;
+                }
                 $coordinador    = $user->personal->jefe_inmediato_segundo_id;
                 $idPersonal     = $user->personal->id;
             } else {
@@ -331,6 +338,28 @@ class RenovacionesController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $venta = renovacionesVentasModel::find($id);
+            if($venta != null){
+                $venta->delete();   
+                return back()->with('success', 'Venta eliminada Correctamente.');
+            }
+                return back()->with('error', 'Error al eliminar la venta: Venta no encontrada.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al eliminar la venta: ' . $e->getMessage());
+        }
+    }
+
+    public function indexImport()
+    {
+        return view('renovaciones.uploads.index');
+    }
+
+    public function StorageImport(Request $request)
+    {
+        $file = $request->file('archivo');
+        $import = new SeguimientosImports();
+        Excel::import($import, $file);
+        return back()->with('success', 'Seguimientos importados correctamente');
     }
 }

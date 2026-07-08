@@ -11,4 +11,9 @@ class renovacionesEstatusModel extends Model
         'descripcion',
         'active'
     ];
+
+    public function RelationObservationes()
+    {
+        return $this->hasMany(renovacionesObservacionesModel::class, 'estatus_id', 'id');
+    }
 }

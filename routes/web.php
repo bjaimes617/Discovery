@@ -178,15 +178,18 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
 
      Route::controller(RenovacionesController::class)->group(function () {
         #carga de seguimientos masivos
-        Route::get('renovaciones/create',             'create')->name('renovaciones.create');
-        Route::post('renovaciones/store',             'store')->name('renovaciones.store');
-        Route::post("renovaciones/check/dn",            "checkOrderOnix")->name("renovaciones.check.dn");
+        Route::get('renovaciones/create',             'create')->middleware('permission:renovaciones.create')->name('renovaciones.create');
+        Route::post('renovaciones/store',             'store')->middleware('permission:renovaciones.create')->name('renovaciones.store');
+        Route::post("renovaciones/check/dn",          'checkOrderOnix')->name("renovaciones.check.dn");
 
-        Route::get('renovaciones/index',             'index')->name('renovaciones.index');
-        Route::post('renovaciones/search',           'search')->name('renovaciones.search');
-        Route::get('renovaciones/edit/{id}',         'edit')->name('renovaciones.edit');
-        Route::put('renovaciones/{id}/update',       'update')->name('renovaciones.update');
-        Route::delete('renovaciones/{id}/delete',    'delete')->name('renovaciones.delete');
+        Route::get('renovaciones/index',                'index')->middleware('permission:renovaciones.index')->name('renovaciones.index');
+        Route::post('renovaciones/search',              'search')->middleware('permission:renovaciones.index')->name('renovaciones.search');
+        Route::get('renovaciones/edit/{id}',            'edit')->middleware('permission:renovaciones.edit')->name('renovaciones.edit');
+        Route::put('renovaciones/{id}/update',          'update')->middleware('permission:renovaciones.edit')->name('renovaciones.update');
+        Route::delete('renovaciones/{id}/delete',       'delete')->middleware('permission:renovaciones.delete')->name('renovaciones.delete');
+
+        Route::get('renovaciones/import/seguimientos',   'indexImport')->middleware('permission:renovaciones.import')->name('renovaciones.import.index');
+        Route::post('renovaciones/import/seguimientos',  'StorageImport')->middleware('permission:renovaciones.import')->name('renovaciones.import.storage');
 
     });
 

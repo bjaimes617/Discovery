@@ -31,12 +31,17 @@ class CheckBaitPortabilidad
             if ($mesesTranscurridos >= 3) {
                 return $next($request);
             } else {
+                $super = $venta->relationSupervisor != null ?
+                    "Supervisor: " . $venta->relationSupervisor->relationUser->nombre_apellido :
+                    "Operador: " . $venta->RelationUser->nombre_apellido;
+                $fecha = Carbon::parse($venta->created_at)->format('d/m/Y');
+                $mensaje = "El número de portabilidad fue registrado hace menos de 3 meses (Fecha: " . $fecha . ", Asociado a: " . $super . ").";
                 if ($request->expectsJson() || $request->is('api/*')) {
                     return response()->json([
-                        'error' => 'El número de portabilidad fue registrado hace menos de 3 meses.'
+                        'error' => $mensaje
                     ], 422);
                 }
-                return back()->with('error', 'El número de portabilidad fue registrado hace menos de 3 meses.');
+                return back()->with('error', $mensaje);
             }
         }
 

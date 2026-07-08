@@ -336,3 +336,102 @@ function DestroyVentas(id) {
         }
     });
 }
+
+
+function CopyText(identificador) {
+    //Seleccionamos el data del input con el texto generado
+    var textoRaw = $("#button" + identificador).data("text");
+    var estatus = $("#button" + identificador).data("estatus");
+
+    if (estatus === 2) {
+        var title = "Texto Generado De la Venta";
+        var content = `
+            <textarea id="textoCopiar" readonly style="width:100%; height:200px; white-space: pre-wrap; margin-bottom: 10px;"></textarea>
+            <button id="btnCopiar" class="swal2-confirm swal2-styled" style="margin-right: 10px;">Copiar texto</button>
+            <button id="btnCerrar" class="swal2-cancel swal2-styled">Cerrar</button>
+        `;
+    } else {
+        var title = "Observaciones De la Venta";
+        var content = `<textarea id="textoCopiar" disabled style="width:100%; height:200px; white-space: pre-wrap; margin-bottom: 10px;"></textarea>`;
+    }
+
+    Swal.fire({
+        title: title,
+        html: content,
+        showConfirmButton: false,
+        showCancelButton: estatus === 2 ? false : true,
+        didOpen: () => {
+            const textarea = Swal.getPopup().querySelector("#textoCopiar");
+            const btnCopiar = Swal.getPopup().querySelector("#btnCopiar");
+            const btnCerrar = Swal.getPopup().querySelector("#btnCerrar");
+
+            // Asigna el texto al textarea (reemplaza secuencias \n por saltos reales)
+            let textoRaw = $("#button" + identificador).data("text");
+            textoRaw = textoRaw.replace(/\\n/g, "\n");
+            textoRaw = textoRaw.replace(/\\u([\dA-F]{4})/gi, (match, grp) =>
+                String.fromCharCode(parseInt(grp, 16)),
+            );
+            textarea.value = textoRaw;
+
+            // Copiar al portapapeles
+            if (btnCopiar) {
+                btnCopiar.addEventListener("click", async () => {
+                    const textarea =
+                        Swal.getPopup().querySelector("#textoCopiar");
+                    textarea.select();
+                    try {
+                        const successful = document.execCommand("copy");
+                        if (successful) {
+                            btnCopiar.textContent = "¡Copiado!";
+                            setTimeout(() => {
+                                btnCopiar.textContent = "Copiar texto";
+                            }, 2000);
+                        } else {
+                            alert(
+                                "No se pudo copiar el texto automáticamente. Por favor, copie manualmente.",
+                            );
+                        }
+                    } catch (err) {
+                        console.error("Error al copiar al portapapeles:", err);
+                        alert(
+                            "No se pudo copiar el texto automáticamente. Por favor, copie manualmente.",
+                        );
+                    }
+                });
+
+                // Cerrar el modal
+                btnCerrar.addEventListener("click", () => {
+                    Swal.close();
+                });
+            }
+        },
+    });
+}
+
+///cargado de archivos CRM
+$("#cargadorArchivo").validate({
+    rules: {
+        archivo: {
+            required: true,
+            validateExtention: true,
+        },
+    },
+    errorPlacement: function (error, element) {
+        error.addClass("is-invalid text-sm");
+        element.closest(".form-group").append(error).after();
+    },
+    highlight: function (element, errorClass, validClass) {
+        $(element).addClass("is-invalid");
+    },
+    unhighlight: function (element, errorClass, validClass) {
+        $(element).removeClass("is-invalid");
+    },
+    submitHandler: function (form) {
+        var Toastr = main();
+        Toastr.fire({
+            icon: "info",
+            title: "Procesando Archivo, Espere por favor.",
+        });
+        form.submit();
+    },
+});

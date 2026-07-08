@@ -24,9 +24,9 @@ class BaitApiController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("Solicitud recibida en BaitRespondio", [
+       /* Log::info("Solicitud recibida en BaitRespondio", [
             'Data' => $request->all()
-        ]);
+        ]);*/
 
         try {
             $datarecive = new BaitRespondio();

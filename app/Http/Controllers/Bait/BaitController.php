@@ -44,7 +44,7 @@ class BaitController extends Controller
             $numero_portar = trim($request->numero_portabilidad);
 
             if (!preg_match("/^[0-9]{10}$/", $numero_portar)) {
-                return response()->json(false);
+                return response()->json("El número debe tener 10 dígitos.");
             }
 
             $query = BaitVentas::where('numero_portar', $numero_portar);
@@ -62,7 +62,11 @@ class BaitController extends Controller
 
                 $mesesTranscurridos = Carbon::parse($venta->created_at)->diffInMonths(Carbon::now());
                 if ($mesesTranscurridos < 3) {
-                    return response()->json(false);
+                    $fecha = Carbon::parse($venta->created_at)->format('d/m/Y');
+                    $super =  $venta->relationSupervisor != null ?
+                        "Supervisor: " . $venta->relationSupervisor->relationUser->nombre_apellido :
+                        "Operador: " . $venta->RelationUser->nombre_apellido;
+                    return response()->json("Número de Portabilidad, registrado hace menos de 3 meses (Fecha: " . $fecha . ", Asociado a " . $super . ").");
                 }
             }
 
