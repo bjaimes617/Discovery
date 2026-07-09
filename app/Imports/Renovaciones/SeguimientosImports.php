@@ -81,7 +81,8 @@ class SeguimientosImports implements ToCollection, WithChunkReading, WithHeading
                         "plan_actual"       => $seguimiento["plan_actual"] != null ? strtoupper($seguimiento["plan_actual"]):null,
                         "monto_plan_anterior" => $seguimiento["monto_plan_anterior"] != null ? $seguimiento["monto_plan_anterior"]:null,
                         "monto_plan_actual"   => $seguimiento["monto_plan_actual"] != null ? $seguimiento["monto_plan_actual"]:null,
-                        "observaciones"     => "Seguimiento realizado el: ". Carbon::now()." | Estatus: ".strtoupper($seguimiento["estatus"]),
+                        "observaciones"     => "Seguimiento realizado el: ". Carbon::now()." | Estatus: ".strtoupper($seguimiento["estatus"]) ." |
+                         Observaciones: ".strtoupper($seguimiento["observaciones"]),
                         "usuario"           => Auth::user()->nombre_apellido,
                         "created_at"        => Carbon::now(),
                         "updated_at"        => Carbon::now()
@@ -92,26 +93,28 @@ class SeguimientosImports implements ToCollection, WithChunkReading, WithHeading
                     "DN"        =>$seguimiento['dn'],
                     "orden_onix"=>$seguimiento["orden_onix"],
                 ];
-            }
-            if (count($Update) > 0) {
-                foreach ($Update as $venta) {                  
-                    renovacionesVentasModel::where('id', $venta['id'])->update([
-                        "estatus_id"        => $venta['estatus_id'],
-                        "observaciones_id"  => $venta['observaciones_id'],
-                        "llamada_bo"        => $venta['llamada_bo'],
-                        "plan_anterior"     => $venta['plan_anterior'],
-                        "plan_actual"       => $venta['plan_actual'],
-                        "monto_plan_anterior" => $venta['monto_plan_anterior'],
-                        "monto_plan_actual"   => $venta['monto_plan_actual'],
-                        "updated_at"        => $venta['updated_at']
-                    ]);
-                }
-            }
-
-            if (count($insertHistorico) > 0) {
-                renovacionesHistoricoModel::insert($insertHistorico);
-            }        
+            }               
         }
+
+        if (count($Update) > 0) {
+            foreach ($Update as $venta) {                  
+                renovacionesVentasModel::where('id', $venta['id'])->update([
+                    "estatus_id"        => $venta['estatus_id'],
+                    "observaciones_id"  => $venta['observaciones_id'],
+                    "llamada_bo"        => $venta['llamada_bo'],
+                    "plan_anterior"     => $venta['plan_anterior'],
+                    "plan_actual"       => $venta['plan_actual'],
+                    "monto_plan_anterior" => $venta['monto_plan_anterior'],
+                    "monto_plan_actual"   => $venta['monto_plan_actual'],
+                    "updated_at"        => $venta['updated_at']
+                ]);
+            }
+        }
+
+        if (count($insertHistorico) > 0) {
+            renovacionesHistoricoModel::insert($insertHistorico);
+        }     
+
         return true;
     }   
 

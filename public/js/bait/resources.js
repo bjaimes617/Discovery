@@ -101,6 +101,7 @@ var KTFormControls = (function () {
                         confirmButtonText: "Procesar",
                         cancelButtonText: "Cancelar",
                     }).then((result) => {
+                        $("button[type='submit']").prop("disabled", true);
                         if (result.value === true) {
                             var inputs = form.querySelectorAll("input, select");
                             for (var i = 0; i < inputs.length; i++) {
@@ -111,14 +112,12 @@ var KTFormControls = (function () {
                                     inputs[i].readOnly = true; // Luego establecerlo como readonly
                                 }
                             }
-                            button = form.querySelector(
-                                "button[type='submit']",
-                            );
-                            button.disabled = true;
+                                                        
                             form.submit();
                         }
                     });
                 } else {
+                    $("button[type='submit']").prop("disabled", true);
                     var inputs = form.querySelectorAll("input, select");
                     for (var i = 0; i < inputs.length; i++) {
                         // Verificar si el input está deshabilitado
@@ -128,8 +127,7 @@ var KTFormControls = (function () {
                             inputs[i].readOnly = true; // Luego establecerlo como readonly
                         }
                     }
-                    button = form.querySelector("button[type='submit']");
-                    button.disabled = true;
+
                     form.submit();
                 }
             },
@@ -183,6 +181,7 @@ var KTFormControls = (function () {
                 }
             },
             submitHandler: function (form) {
+                $("button[type='submit']").prop("disabled", true);
                 var inputs = form.querySelectorAll("input, select");
                 for (var i = 0; i < inputs.length; i++) {
                     // Verificar si el input está deshabilitado
@@ -192,7 +191,6 @@ var KTFormControls = (function () {
                         inputs[i].readOnly = true; // Luego establecerlo como readonly
                     }
                 }
-
                 form.submit();
             },
         });

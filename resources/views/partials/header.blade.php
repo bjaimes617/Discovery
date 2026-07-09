@@ -303,8 +303,8 @@ $nombre = $arrName[0];
                                 </li>
                                 @endpermission
                                 @permission('renovaciones.export')
-                                <li class="kt-menu__item @if($rutaMain == 'bait.reportes.index') kt-menu__item--open kt-menu__item--here @endif" aria-haspopup="true">
-                                    <a href="" class="kt-menu__link ">
+                                <li class="kt-menu__item @if($rutaMain == 'renovaciones.export.index') kt-menu__item--open kt-menu__item--here @endif" aria-haspopup="true">
+                                    <a href="{{ route('renovaciones.export.index')}}" class="kt-menu__link ">
                                             <span class="kt-menu__link-icon"><i class="fa fa-download"></i></span>
                                         <span class="kt-menu__link-text">Reportes</span>
                                     </a>

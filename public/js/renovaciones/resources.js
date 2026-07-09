@@ -435,3 +435,20 @@ $("#cargadorArchivo").validate({
         form.submit();
     },
 });
+
+//validdor reportes
+$("#reportesDescargar").validate({
+    errorPlacement: function (error, element) {
+        error.addClass("is-invalid text-sm");
+        element.closest(".form-group").append(error).after();
+    },
+    highlight: function (element, errorClass, validClass) {
+        $(element).addClass("is-invalid");
+    },
+    unhighlight: function (element, errorClass, validClass) {
+        $(element).removeClass("is-invalid");
+    },
+    submitHandler: function (form) {
+        form.submit();
+    },
+});

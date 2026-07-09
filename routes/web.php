@@ -17,6 +17,7 @@ use App\Http\Controllers\Bait\Backoffice;
 use App\Http\Controllers\Bait\UploadsController;
 
 use App\Http\Controllers\Renovaciones\RenovacionesController; 
+use App\Http\Controllers\Renovaciones\ReportesController;
 #Controllador de Google Sheet Api
 use App\Http\Controllers\Api\GoogleApi;
 
@@ -191,8 +192,15 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
         Route::get('renovaciones/import/seguimientos',   'indexImport')->middleware('permission:renovaciones.import')->name('renovaciones.import.index');
         Route::post('renovaciones/import/seguimientos',  'StorageImport')->middleware('permission:renovaciones.import')->name('renovaciones.import.storage');
 
+        Route::get('renovaciones/reportes',             'IndexReportes')->middleware('permission:renovaciones.reportes')->name('renovaciones.reportes.index');
+        Route::post('renovaciones/reportes/download',   'DownloadReportes')->name('renovaciones.reportes.download');
     });
 
+    Route::controller(ReportesController::class)->group(function () {
+            Route::get('renovaciones/export',             'index')->name('renovaciones.export.index');
+            Route::post('renovaciones/export/download',   'store')->name('renovaciones.export.download');
+    });
+    
     Route::get('google/api',        [GoogleApi::class, 'show'])->name('google.api');
     Route::get('google/api/store',  [GoogleApi::class, 'store'])->name('google.api.store');
 });
