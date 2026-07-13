@@ -20,65 +20,21 @@ class BaitApiController extends Controller
     public function __construct($campania = 5)
     {
         $this->middleware('CheckBaitPortabilidad')->only(['StoreVentas']);
-    }
+    }   
 
-    public function store(Request $request)
+    public function show(Request $request)
     {
-       /* Log::info("Solicitud recibida en BaitRespondio", [
-            'Data' => $request->all()
-        ]);*/
-
-        try {
-            $datarecive = new BaitRespondio();
-            $datarecive->idcontacto     = $request["idcontacto"];
-            $datarecive->numero_portar  = $request["numero_portabilidad"] == "null" ? null : $request["numero_portabilidad"];
-            $datarecive->ciclo_de_vida  = $request["ciclo_de_vida"];
-            $datarecive->usuario        = $request["usuario"] == "null" ? null : $request["usuario"];
-            $datarecive->numero_contacto = $request["numero_contacto"] == "null" ? null : $request["numero_contacto"];
-            $datarecive->anuncio        = $request["anuncio"] == "null" ? null : $request["anuncio"];
-            $datarecive->save();
-
-            // Usamos first() directamente para evitar dos consultas (exists + first)
-            $venta = BaitVentas::where('idcontacto', $request["idcontacto"])->first();
-
-            if ($venta) {
-                $venta->ciclo_vida = ucwords(strtolower($request["ciclo_de_vida"]));
-                $venta->save();
-
-                $historico = new BaitHistoricos();
-                $historico->bait_ventas_id  = $venta->id;
-                $historico->usuario         = $request["usuario"];
-                $historico->estatus_intelix = $venta->estatus_intelix;
-                $historico->save();
-            }
-
-            return response()->json(['status' => 'success'], 200);
-        } catch (\Exception $e) {
-            // Registramos el error con nivel 'error' y detalles adicionales
-            Log::error("Error BaitRespondio: " . $e->getMessage(), [
-                'idcontacto' => $request["idcontacto"],
-                'usuario'    => $request["usuario"],
-                'dn_cliente' => $request["numero_portabilidad"],
-            ]);
-
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Ocurrió un error al procesar la solicitud'
-            ], 500);
-        }
-    }
-
-    public function show()
-    {
-
+       
         $iclos_mostrar_ventas = ["Ventas cargadas", "Re-gestión"];
 
-        return response()->stream(function () use ($iclos_mostrar_ventas) {
+        return response()->stream(function () use ($iclos_mostrar_ventas,$request) {
             $out = fopen('php://output', 'w');
             fwrite($out, '[');
+            $init = carbon::create($request->inicio)->startOfDay();
+            $fin =  carbon::create($request->fin)->endofDay();
             $first = true;
 
-            $data = BaitRespondio::selectRaw(
+            $data = BaitRespondio::select(
                 'bait_respondio.created_at',
                 'bait_respondio.idcontacto',
                 'bait_respondio.ciclo_de_vida',
@@ -104,8 +60,7 @@ class BaitApiController extends Controller
                 'bait_ventas.personal_id',
                 'op.numero_empleado as empleado',
                 'sup.numero_empleado as supervisor',
-                'coord.numero_empleado as coordinador'
-            )
+                'coord.numero_empleado as coordinador')
                 ->leftJoin('bait_ventas', 'bait_respondio.idcontacto', '=', 'bait_ventas.idcontacto')
                 ->leftJoin('bait_tiendas', 'bait_ventas.tienda_id', '=', 'bait_tiendas.id')
                 ->leftJoin('bait_municipios', 'bait_tiendas.municipio_id', '=', 'bait_municipios.id')
@@ -113,6 +68,7 @@ class BaitApiController extends Controller
                 ->leftJoin('personal as op', 'bait_ventas.personal_id', '=', 'op.id')
                 ->leftJoin('personal as sup', 'bait_ventas.supervisor_id', '=', 'sup.id')
                 ->leftJoin('personal as coord', 'bait_ventas.coordinador_id', '=', 'coord.id')
+                ->wherebetween('bait_respondio.created_at',array($init, $fin))
                 ->cursor();
 
             foreach ($data as $value) {
@@ -123,10 +79,10 @@ class BaitApiController extends Controller
 
                 $active = in_array($value->ciclo_de_vida, $iclos_mostrar_ventas) ? true : false;
                 $array = array(
-                    'Fecha'                 => Carbon::parse($value->created_at)->format('Y-m-d H:i:s'),
+                    'Fecha'                 => Carbon::create($value->created_at)->format('Y-m-d H:i:s'),
                     'ID de Contacto'        => $value->idcontacto,
                     'Ciclo de vida'         => $value->ciclo_de_vida,
-                    'Nombre'                => 'Nombre del Contacto Whastapp',
+                    'Nombre'                => 'Whastapp',
                     'Campaña'               => $value->anuncio,
                     'Correo electronico'    => $active ? $value->email : '',
                     'Telefono'              => $active ? $value->numero_portabilidad : '',

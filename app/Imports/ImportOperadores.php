@@ -80,6 +80,26 @@ class ImportOperadores implements ToCollection, WithHeadingRow, WithValidation
                                 break;
                         }
                         break;
+                    case 'Renovaciones':
+                        switch ($row['cargo']) {
+                            case 'Operador':
+                                $rol = 74;
+                                $cargo = 7; //operador
+                                break;
+                            case 'Supervisor':
+                                $rol = 75;
+                                $cargo = 4; ///supervisor
+                                break;
+                            case 'Backoffice':
+                                $rol = 77;
+                                $cargo = 6; //backoffice
+                                break;
+                            case 'Coordinador':
+                                $rol = 76;
+                                $cargo = 3; //coordinador
+                                break;
+                        }
+                        break;
                 }
 
                 $user->attachRole($rol);
