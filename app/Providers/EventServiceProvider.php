@@ -29,19 +29,23 @@ class EventServiceProvider extends ServiceProvider {
      */
     public function boot() {
         Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
-            $loginLog = new LoginLog();
-            $loginLog->ip = Request::ip();
-            $loginLog->event = "Login";
-            $loginLog->user_id = $event->user->id;
-            $loginLog->save();
+            if ($event->user) {
+                $loginLog = new LoginLog();
+                $loginLog->ip = Request::ip();
+                $loginLog->event = "Login";
+                $loginLog->user_id = $event->user->id;
+                $loginLog->save();
+            }
         });
 
         Event::listen(\Illuminate\Auth\Events\Logout::class, function ($event) {
-            $loginLog = new LoginLog();
-            $loginLog->ip = Request::ip();
-            $loginLog->event = "Logout";
-            $loginLog->user_id = $event->user->id;
-            $loginLog->save();
+            if ($event->user) {
+                $loginLog = new LoginLog();
+                $loginLog->ip = Request::ip();
+                $loginLog->event = "Logout";
+                $loginLog->user_id = $event->user->id;
+                $loginLog->save();
+            }
         });
         parent::boot();
 

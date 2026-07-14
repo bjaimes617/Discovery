@@ -168,10 +168,10 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
 
     Route::controller(UploadsController::class)->group(function () {
         #carga de seguimientos masivos
-        Route::get('bait/uploads/seguimientos',             'IndexSeguimientosMasivos')->middleware('permission:bait.backoffice.uploadcm')->name('bait.uploads.seguimientos.index');
+        Route::get('bait/uploads/seguimientos',             'IndexSeguimientosMasivos')->middleware('throttle:1,10')->middleware('permission:bait.backoffice.uploadcm')->name('bait.uploads.seguimientos.index');
         Route::post('bait/uploads/seguimientos/store',      'UploadSeguimientosMasivos')->name('bait.uploads.seguimientos.store');
         #ruta CM concentra
-        Route::get('bait/uploads/concentra',                'IndexCMConcentra')->middleware('permission:bait.backoffice.uploadcm')->name('bait.uploads.concentra.index');
+        Route::get('bait/uploads/concentra',                'IndexCMConcentra')->middleware('throttle:1,10')->middleware('permission:bait.backoffice.uploadcm')->name('bait.uploads.concentra.index');
         Route::post('bait/uploads/concentra/store',         'StoreCMConcentra')->name('bait.uploads.concentra.store');
         #reportes
         Route::get('bait/reportes',             'IndexReportes')->middleware('permission:bait.reportes')->name('bait.reportes.index');

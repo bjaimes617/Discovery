@@ -41,7 +41,8 @@ class UploadsController extends Controller
                 return redirect()->back()->with('successVentas', 'Procesamiento del Archivo completado con éxito');
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('errorVentas', 'Error al procesar el archivo: ' . $e->getMessage());
+            //dd($e );
+            return redirect()->back()->with('errorVentas', 'Error al procesar el archivo: ' . $e->getMessage() . ' En Linea ' . $e->getLine() . ' En Archivo ' . $e->getFile());
         }
     }
 
@@ -84,13 +85,13 @@ class UploadsController extends Controller
             case 'general':
                 $datos = BaitVentas::with('relationHistorico', 'relationTienda')->whereBetween('created_at', [$init->copy()->format('Y-m-d H:m:s'), $end->copy()->format('Y-m-d H:m:s')])->cursor();
 
-                return Excel::download(new BaitExport($datos, true), 'Reporte de Tipificaciones ' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
+                return Excel::download(new BaitExport($datos, true), 'Reporte de Tipificaciones Bait' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
                 break;
             case 'ventas':
                 $datos = BaitVentas::with('relationTienda')
                     ->whereBetween('created_at', [$init->copy()->format('Y-m-d H:m:s'), $end->copy()->format('Y-m-d H:m:s')])
                     ->cursor();
-                return Excel::download(new BaitExport($datos, false), 'Reporte de Ventas ' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
+                return Excel::download(new BaitExport($datos, false), 'Reporte de Ventas Bait' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
                 break;
             case 'respondio':
                 $datos = BaitRespondio::select(
@@ -129,7 +130,7 @@ class UploadsController extends Controller
                     ])->get();
                 //dd($datos);
 
-                return Excel::download(new RespondioExport($datos), 'Reporte de Ventas ' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
+                return Excel::download(new RespondioExport($datos), 'Reporte de Ventas Bait - Respondio' . $init->copy()->format('d-m-Y') . ' al ' . $end->copy()->format('d-m-Y') . '.xlsx');
                 break;
             default:
                 return redirect()->back()->with('error', 'Reporte no encontrado');

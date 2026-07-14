@@ -178,8 +178,8 @@
         <script src="{{asset("assets/plugins/general/dropzone/dist/dropzone.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/general/js/global/integration/plugins/dropzone.init.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/general/quill/dist/quill.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/general/@yaireo/tagify/dist/tagify.polyfills.min.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/general/@yaireo/tagify/dist/tagify.min.js")}}"  type="text/javascript"></script>    
+       {{--  <script src="{{asset("assets/plugins/general/@yaireo/tagify/dist/tagify.polyfills.min.js")}}"  type="text/javascript"></script>    
+        <script src="{{asset("assets/plugins/general/@yaireo/tagify/dist/tagify.min.js")}}"  type="text/javascript"></script>     --}}
         <script src="{{asset("assets/plugins/general/summernote/dist/summernote.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/general/markdown/lib/markdown.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/general/bootstrap-markdown/js/bootstrap-markdown.js")}}"  type="text/javascript"></script>    
@@ -211,12 +211,12 @@
         <script src="{{asset("assets/plugins/custom/plugins/jquery-ui/jquery-ui.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js")}}"  type="text/javascript"></script>    
 
-        <script src="{{asset("assets/plugins/custom/@fullcalendar/core/main.js")}}"  type="text/javascript"></script>    
+       {{--  <script src="{{asset("assets/plugins/custom/@fullcalendar/core/main.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/@fullcalendar/daygrid/main.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/@fullcalendar/google-calendar/main.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/@fullcalendar/interaction/main.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/@fullcalendar/list/main.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/custom/@fullcalendar/timegrid/main.js")}}"  type="text/javascript"></script>    
+        <script src="{{asset("assets/plugins/custom/@fullcalendar/timegrid/main.js")}}"  type="text/javascript"></script>     
         <script src="{{asset("assets/plugins/custom/gmaps/gmaps.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/flot/dist/es5/jquery.flot.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.resize.js")}}"  type="text/javascript"></script>    
@@ -224,14 +224,14 @@
         <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.pie.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.stack.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.crosshair.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.axislabels.js")}}"  type="text/javascript"></script>    
+        <script src="{{asset("assets/plugins/custom/flot/source/jquery.flot.axislabels.js")}}"  type="text/javascript"></script>    --}}
         <script src="{{asset("assets/plugins/custom/datatables.net/js/jquery.dataTables.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-bs4/js/dataTables.bootstrap4.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/js/global/integration/plugins/datatables.init.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-autofill/js/dataTables.autoFill.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-autofill-bs4/js/autoFill.bootstrap4.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jszip/dist/jszip.min.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/custom/pdfmake/build/pdfmake.min.js")}}"  type="text/javascript"></script>    
+        {{-- <script src="{{asset("assets/plugins/custom/pdfmake/build/pdfmake.min.js")}}"  type="text/javascript"></script>     --}}
         <script src="{{asset("assets/plugins/custom/pdfmake/build/vfs_fonts.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-buttons/js/dataTables.buttons.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-buttons-bs4/js/buttons.bootstrap4.min.js")}}"  type="text/javascript"></script>    
@@ -250,12 +250,12 @@
         <script src="{{asset("assets/plugins/custom/datatables.net-scroller/js/dataTables.scroller.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/datatables.net-select/js/dataTables.select.min.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jstree/dist/jstree.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/custom/jqvmap/dist/jquery.vmap.js")}}"  type="text/javascript"></script>    
+        {{-- <script src="{{asset("assets/plugins/custom/jqvmap/dist/jquery.vmap.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.world.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.russia.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.usa.js")}}"  type="text/javascript"></script>    
         <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.germany.js")}}"  type="text/javascript"></script>    
-        <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.europe.js")}}"  type="text/javascript"></script>    
+        <script src="{{asset("assets/plugins/custom/jqvmap/dist/maps/jquery.vmap.europe.js")}}"  type="text/javascript"></script>     --}}
         <script src="{{asset("assets/plugins/custom/uppy/dist/uppy.min.js")}}"  type="text/javascript"></script>
           
         <script src="{{asset("assets/js/pages/dashboard.js")}}"  type="text/javascript"></script> 

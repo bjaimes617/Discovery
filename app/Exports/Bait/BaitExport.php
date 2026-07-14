@@ -63,7 +63,7 @@ class BaitExport implements ShouldAutoSize, FromCollection, WithHeadings, WithMa
             foreach ($this->datos as $venta) {
                 $rows->push([
                     'venta'     => $venta,
-                    'historico' => $venta->relationHistorico()->orderBy('created_at', 'desc')->first()
+                    'historico' => $venta->relationHistorico()->orderBy('id', 'desc')->first()
                 ]);
             }
         }
