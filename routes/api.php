@@ -16,18 +16,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+#########################BAIT###################################
 //api para recibir informacion desde respondeo BAIT  / CONCENTRA / RENOVACIONES
 Route::post('/respondio/incoming/data',     [RespondioController::class, 'store']);
 
 //api para enviar los estados AGENTES IA BAIT
 Route::post('/bait/send/estados',      [BaitApiController::class, 'SendEstadosBait']);
-
 //api Storage Ventas desde los AGENTES IA - token por usuario
 Route::middleware(['auth:sanctum'])->post('/bait/incoming/sales',  [BaitApiController::class, 'StoreVentas']);
 Route::put('/bait/update/sales',    [BaitApiController::class, 'updateVenta']);
-
 //api  de totalizacion de ciclos de vida y contactos BAIT
 Route::middleware(['auth:sanctum'])->post('/bait/show/data', [BaitApiController::class, 'show']);
 
+
+
+#########################3RENOVACIONES###################################
 // api reporteria de Renovaciones Ventas Unicas
 Route::middleware(['auth:sanctum'])->post('/renovaciones/show/data', [RenovacionesApiController::class, 'show']);

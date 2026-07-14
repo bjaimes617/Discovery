@@ -16,7 +16,7 @@ use App\Http\Controllers\Bait\BaitController;
 use App\Http\Controllers\Bait\Backoffice;
 use App\Http\Controllers\Bait\UploadsController;
 
-use App\Http\Controllers\Renovaciones\RenovacionesController; 
+use App\Http\Controllers\Renovaciones\RenovacionesController;
 use App\Http\Controllers\Renovaciones\ReportesController;
 #Controllador de Google Sheet Api
 use App\Http\Controllers\Api\GoogleApi;
@@ -47,9 +47,10 @@ Route::post('/twofactor/{user}', [LoginController::class, 'login2FA'])->name('au
 //ROUTES
 Route::group(['middleware' => ['auth', 'activity']], function () {
     //DASHBOARD
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('dashboard/bait', [DashboardController::class, 'bait'])->name('dashboard.bait');
-    Route::post('dashboard/bait/data', [DashboardController::class, 'bait'])->name('dashboard.bait.data');
+    Route::get('dashboard',                                     [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard/bait',                                [DashboardController::class, 'bait'])->name('dashboard.bait');
+    Route::post('dashboard/bait/data',                          [DashboardController::class, 'bait'])->name('dashboard.bait.data');
+    Route::post('dashboard/bait/asignados-sinventas',           [DashboardController::class, 'asignadossinventas'])->name('dashboard.bait.sin-ventas');
     //LOGOUT
     Route::get('logout', [LoginController::class, 'logout'])->name('logout');    //ROLES
     Route::get('/roles/',           [RoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.list');
@@ -177,7 +178,7 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
         Route::post('bait/reportes/download',   'DownloadReportes')->name('bait.reportes.download');
     });
 
-     Route::controller(RenovacionesController::class)->group(function () {
+    Route::controller(RenovacionesController::class)->group(function () {
         #carga de seguimientos masivos
         Route::get('renovaciones/create',             'create')->middleware('permission:renovaciones.create')->name('renovaciones.create');
         Route::post('renovaciones/store',             'store')->middleware('permission:renovaciones.create')->name('renovaciones.store');
@@ -197,10 +198,10 @@ Route::group(['middleware' => ['auth', 'activity']], function () {
     });
 
     Route::controller(ReportesController::class)->group(function () {
-            Route::get('renovaciones/export',             'index')->name('renovaciones.export.index');
-            Route::post('renovaciones/export/download',   'store')->name('renovaciones.export.download');
+        Route::get('renovaciones/export',             'index')->name('renovaciones.export.index');
+        Route::post('renovaciones/export/download',   'store')->name('renovaciones.export.download');
     });
-    
+
     Route::get('google/api',        [GoogleApi::class, 'show'])->name('google.api');
     Route::get('google/api/store',  [GoogleApi::class, 'store'])->name('google.api.store');
 });

@@ -13,6 +13,8 @@ use App\Models\Personal;
 use App\Models\User;
 use Carbon\Carbon;
 use DivisionByZeroError;
+use Exception;
+use Throwable;
 
 class DashboardController extends Controller
 {
@@ -270,6 +272,49 @@ class DashboardController extends Controller
             return response()->json($row);
         } else {
             return view('dashboard.bait', compact('row'));
+        }
+    }
+
+    public function asignadossinventas(Request $request)
+    {
+        $fecha = explode("-", $request->fecha);
+        $inicio = Carbon::createFromFormat('d/m/Y', trim($fecha[0]))->startOfDay();
+        $fin    = Carbon::createFromFormat('d/m/Y', trim($fecha[1]))->endOfDay();
+        try {
+            $ventas = BaitRespondio::select('idcontacto')->where('ciclo_de_vida', 'Ventas cargadas')->whereBetween('created_at', [$inicio, $fin])->pluck('idcontacto');
+
+            $bait = BaitRespondio::where('ciclo_de_vida', 'Leads asignados')->whereNot(function ($query) use ($ventas) {
+                $query->whereIn('idcontacto', $ventas);
+            })->whereBetween('created_at', [$inicio, $fin])->orderby('created_at', 'DESC')->cursor();
+
+            $Datospersonales = Personal::leftjoin("personal as superv", "superv.id", "personal.jefe_inmediato_id")
+                ->leftjoin("users as superv_users", "superv_users.id", "superv.user_id")
+                ->leftjoin("users as user", "user.id", "personal.user_id");
+
+            ///arrays con informacion de supers y agentes
+            $personal       = $Datospersonales->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
+            $super          = $Datospersonales->pluck("superv_users.nombre_apellido", "personal.numero_empleado")->toArray();
+
+            $data = array();
+
+            foreach ($bait as $key => $value) {
+                $cedula = explode(" ", $value->usuario);
+                $leand["fecha"] = Carbon::create($value->created_at)->format('d/m/Y');
+                $leand["hora"] = Carbon::create($value->created_at)->format('H:i:s');
+                $leand["ciclo_de_vida"] = $value->ciclo_de_vida;
+                $leand["numero_contacto"] = $value->numero_contacto;
+                $leand["idcontacto"] = $value->idcontacto;
+                $leand["agente"]    = $personal[$cedula[0]] ?? "- - ";
+                $leand["supervisor"] = $super[$cedula[0]] ?? "- - ";
+                $data[] = $leand;
+            }
+            usort($data, function ($a, $b) {
+                return strcmp($a['agente'], $b['agente']);
+            });
+
+            return response()->json($data);
+        } catch (Throwable $e) {
+            return response()->json("Error al Ubicar los registros." . $e->getMessage(), 500);
         }
     }
 }

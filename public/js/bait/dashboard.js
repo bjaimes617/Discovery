@@ -7,6 +7,15 @@ $("#fecha").daterangepicker({
     cancelClass: "btn-secondary",
 });
 
+$("#fechaasignados").daterangepicker({
+    locale: {
+        format: "DD/MM/YYYY",
+    },
+    buttonClasses: "btn",
+    applyClass: "btn-primary",
+    cancelClass: "btn-secondary",
+});
+
 $(document).ready(function () {
     // destroy datatable if exists
     if ($.fn.DataTable.isDataTable("#metricasusers")) {
@@ -140,6 +149,57 @@ function UpdateDisplayAll() {
         },
         error: function (xhr) {
             console.error("Error updating dashboard data", xhr);
+        },
+    });
+}
+
+function asignadossinventas() {
+    var data = {
+        _token:
+            $("[name=_token]").val() ||
+            $('meta[name="csrf-token"]').attr("content"),
+        fecha: $("#fechaasignados").val(),
+    };
+
+    $.ajax({
+        url: $("#url_sinventas").val(),
+        type: "POST",
+        data: data,
+        dataType: "json",
+        success: function (response) {
+            $("#asignadossinventas").modal("show");
+            if ($.fn.DataTable.isDataTable("#table-asignados")) {
+                $("#table-asignados").DataTable().destroy();
+            }
+
+            var tbody = $("#table-asignados-body");
+            tbody.empty();
+
+            $.each(response, function (key, item) {
+                var tr = $("<tr>");
+                tr.append("<td>" + item.fecha + "</td>");
+                tr.append("<td>" + item.hora + "</td>");
+                tr.append("<td>" + item.idcontacto + "</td>");
+                tr.append("<td>" + item.ciclo_de_vida + "</td>");
+                tr.append("<td>" + item.numero_contacto + "</td>");
+                tr.append("<td>" + item.agente + "</td>");
+                tr.append("<td>" + item.supervisor + "</td>");
+                tbody.append(tr);
+            });
+
+            $("#table-asignados").DataTable({
+                responsive: true,
+                autoWidth: false,
+                processing:
+                    "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+                bPaginate: true,
+                bProcessing: true,
+                order: [[0, "asc"]],
+            });
+        },
+        error: function (response) {
+            $("#asignadossinventas").modal("hide");
+            toastr.error(response.responseJSON);
         },
     });
 }

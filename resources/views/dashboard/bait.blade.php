@@ -23,6 +23,7 @@
 <div class="kt-container kt-grid__item kt-grid__item--fluid">
     @csrf
     <input type="hidden" name="url_data" id="url_data" value="{{ route('dashboard.bait.data') }}">
+    <input type="hidden" name="url_sinventas" id="url_sinventas" value="{{ route('dashboard.bait.sin-ventas') }}">
     <!--begin::Dashboard Row 1 (Stats)-->
     <div class="row">
         <div class="col-lg-12 col-md-12">
@@ -293,6 +294,16 @@
                     <div class="kt-portlet__head-label">
                         <h3 class="kt-portlet__head-title">Estadísticas de Ventas por Operador</h3>
                     </div>
+                    <div class="kt-portlet__head-toolbar">
+                        <div class="kt-portlet__head-wrapper">
+                            <div class="kt-portlet__head-actions">
+                                <button href="#" onclick="asignadossinventas()" class="btn btn-primary btn-elevate btn-icon-sm">
+                                    <i class="flaticon-users"></i>
+                                    Asignados Sin Ventas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="kt-portlet__body">
                     <!-- Placeholder para gráfico -->
@@ -354,87 +365,51 @@
             <!--end::Portlet-->
         </div>
     </div>
-    <!--end::Dashboard Row 2-->
+    <div class="modal fade" id="asignadossinventas" tabindex="-1" role="dialog" aria-labelledby="asignadossinventas_modal" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="asignadossinventas">Asignados Sin Ventas</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12">
+                        <label>Fecha:</label>
+                            <div class="form-group ">
+                                <div class='input-group' id='fechar'>
+                                    <input type='text' class="form-control" autocomplete="off" required name="fechaasignados" id="fechaasignados" />
+                                    <div class="input-group-append">
+                                        <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                    </div>
+                                </div> 
+                            </div> 
+                    </div>    
+                    <div class="col-lg-12 col-md-12">    
+                     <table  id="table-asignados" class="table text-center table-striped- table-sm table-bordered compact table-checkable" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>ID Contacto</th>
+                                    <th>Ciclo de Vida</th>
+                                    <th>numero_contacto</th>
+                                    <th>Vendedor</th>
+                                    <th>Supervisor</th>                                    
+                                </tr>
+                            </thead>  
+                            <tbody id="table-asignados-body"></tbody>                                                  
+                        </table>         
+                        </div>    
+                </div> 
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>            
+            </div>
         </div>
     </div>
-    <!--end::Dashboard Row 2-->
-
-    <!--begin::Dashboard Row 3
-    <div class="row">
-        <div class="col-lg-12 col-xl-12 order-lg-3 order-xl-3">
-        
-            <div class="kt-portlet kt-portlet--height-fluid">
-                <div class="kt-portlet__head">
-                    <div class="kt-portlet__head-label">
-                        <h3 class="kt-portlet__head-title">Últimas Transacciones</h3>
-                    </div>
-                    <div class="kt-portlet__head-toolbar">
-                        <div class="kt-portlet__head-wrapper">
-                            <a href="#" class="btn btn-brand btn-sm btn-bold">
-                                <i class="la la-plus"></i> Nueva Transacción
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="kt-portlet__body">
-                   
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-hover">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Monto</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#TR-001</td>
-                                    <td>Juan Pérez</td>
-                                    <td>21 May, 2026</td>
-                                    <td>$120.00</td>
-                                    <td><span class="kt-badge kt-badge--success kt-badge--inline kt-badge--pill">Completado</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Editar"><i class="la la-edit"></i></a>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Ver Detalles"><i class="la la-eye"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#TR-002</td>
-                                    <td>María Gómez</td>
-                                    <td>21 May, 2026</td>
-                                    <td>$85.50</td>
-                                    <td><span class="kt-badge kt-badge--warning kt-badge--inline kt-badge--pill">Pendiente</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Editar"><i class="la la-edit"></i></a>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Ver Detalles"><i class="la la-eye"></i></a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#TR-003</td>
-                                    <td>Carlos López</td>
-                                    <td>20 May, 2026</td>
-                                    <td>$240.00</td>
-                                    <td><span class="kt-badge kt-badge--danger kt-badge--inline kt-badge--pill">Cancelado</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Editar"><i class="la la-edit"></i></a>
-                                        <a href="#" class="btn btn-sm btn-clean btn-icon btn-icon-md" title="Ver Detalles"><i class="la la-eye"></i></a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </div>-->
-
-    <!--end::Dashboard Row 3-->
-
+</div> 
 </div>
 <!-- end:: Content -->
 @endsection
