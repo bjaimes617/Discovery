@@ -44,7 +44,7 @@ var KTFormControls = (function () {
                         },
                     },
                 },
-            },           
+            },
             errorElement: "span",
             errorClass: "text-danger",
             //display error alert on form submit
@@ -112,7 +112,7 @@ var KTFormControls = (function () {
                                     inputs[i].readOnly = true; // Luego establecerlo como readonly
                                 }
                             }
-                                                        
+
                             form.submit();
                         }
                     });
@@ -372,7 +372,7 @@ $("#baitSearch").validate({
                         $("#ventas-result").fadeIn();
                     },
                     responsive: true,
-                    ordering: false,
+                    ordering: true,
                     autoWidth: false,
                     deferRender: true,
                     data: data,
