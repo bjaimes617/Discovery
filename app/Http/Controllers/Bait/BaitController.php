@@ -12,6 +12,7 @@ use App\Models\bait\BaitTiendas;
 use App\Models\bait\BaitVentas;
 use App\Models\bait\BaitHistoricos;
 use App\Models\bait\BaitRespondio;
+use App\Models\bait\BaitEstatus;
 
 use App\Models\Personal;
 use Illuminate\Support\Facades\Session;
@@ -82,6 +83,7 @@ class BaitController extends Controller
             \Auth::loginUsingId(ENV('OTHER_USER_ID', false), true) :
             \Auth::user();
 
+            $estatus = BaitEstatus::where('active',1)->get();
         if ($user->ficha_personal == "Si")
             $cargo = $user->personal->cargo->nombre_cargo;
         switch ($cargo):
@@ -117,7 +119,8 @@ class BaitController extends Controller
         endswitch;
 
         return view('bait.index')->with([
-            "supervisores" => $supervisores
+            "supervisores" => $supervisores,
+            "estatus"      => $estatus
         ]);
     }
 
@@ -159,6 +162,10 @@ class BaitController extends Controller
                     $liberar = true;
                     break;
             endswitch;
+        }
+
+        if ($request->estatus != "todos") {
+            $sql->where("bait_ventas.estatus_id", "=", $request->estatus);
         }
 
         if (Auth::user()->ficha_personal == "Si" || Auth::user()->hasPermission('bait.administrativo')) {

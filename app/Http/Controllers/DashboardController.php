@@ -109,8 +109,9 @@ class DashboardController extends Controller
         } else {
             $countventas = $sql->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();           
         }       
-        #total Ingresadas a Intelix
-        $ingresadas          = $countventas->where('estatus_id', 2)->count();
+        #total Ingresadas a Intelix estatu
+        $ingresadas          = $countventas->whereNotIn('estatus_id', [1,3,4,5,6])->count();
+        
         #rechazadas de auditorias
         $rechazadas          = $countventas->whereIn('estatus_id', [3,6])->count();
        

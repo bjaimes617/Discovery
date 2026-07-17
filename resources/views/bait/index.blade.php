@@ -36,7 +36,7 @@
                     <form method="POST" action="{{ route('bait.search') }}" id="baitSearch" class="kt-form kt-form--label-right">
                         @csrf      
                         <div class="row"> 
-                            <div class="col-lg-4 col-md-12">
+                            <div class="col-lg-3 col-md-12">
                                 <label>Numero a Portar:</label>
                                 <div class="form-group ">
                                     <div class='input-group'>
@@ -44,7 +44,7 @@
                                     </div> 
                                 </div>                                     
                             </div>                           
-                            <div class="col-lg-4 col-md-12">
+                            <div class="col-lg-3 col-md-12">
                                 <label>Fecha:</label>
                                 <div class="form-group ">
                                     <div class='input-group' id='fechar'>
@@ -55,7 +55,7 @@
                                     </div> 
                                 </div>                                     
                             </div>                            
-                            <div class="col-lg-4 col-md-12">
+                            <div class="col-lg-3 col-md-12">
                                 <label>Supervisor:</label>
                                 <div class="form-group">
                                     <div class='input-group'>                                       
@@ -63,6 +63,19 @@
                                             <option value="todos">[TODOS]</option>
                                             @foreach ($supervisores as $sups)
                                             <option value="{{ $sups->id }}">{{ $sups->nombre_apellido }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div> 
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-12">
+                                <label>Estatus Discovery:</label>
+                                <div class="form-group">
+                                    <div class='input-group'>                                       
+                                        <select name="estatus" id="estatus" class="select form-control">
+                                            <option value="todos">[TODOS]</option>
+                                            @foreach ($estatus as $estats)
+                                            <option value="{{ $estats->id }}">{{ $estats->descripcion }}</option>
                                             @endforeach
                                         </select>
                                     </div> 

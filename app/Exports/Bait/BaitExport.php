@@ -109,6 +109,7 @@ class BaitExport implements ShouldAutoSize, FromCollection, WithHeadings, WithMa
             "Asesor",
             "Supervisor",
             "Coordinador",
+            "Estatus Discovery",
             "Histórico Usuario",
             "Histórico Estatus",
             "Histórico Observación",
@@ -166,6 +167,7 @@ class BaitExport implements ShouldAutoSize, FromCollection, WithHeadings, WithMa
             $venta->relationPersonal ? $venta->relationPersonal->RelationUser->nombre_apellido : "", // Asesor
             $venta->relationSupervisor ? $venta->relationSupervisor->RelationUser->nombre_apellido : "", // Supervisor
             $venta->relationCoordinador ? $venta->relationCoordinador->RelationUser->nombre_apellido : "", // Coordinador
+            $estatuses[$venta->estatus_id],
             // HISTORICAL DATA
             $historico && $historico->usuario ? $historico->usuario : "",
             $historico && $historico->estatus_id ? $estatuses[$historico->estatus_id] : "",

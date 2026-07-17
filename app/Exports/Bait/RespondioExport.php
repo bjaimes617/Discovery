@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use App\Models\bait\BaitEstatusConcentra;
 use App\Models\bait\BaitTiendas;
+use App\Models\bait\BaitEstatus;
 use App\Models\Personal;
 use Carbon\Carbon;
 
@@ -120,12 +121,15 @@ class RespondioExport implements ShouldAutoSize, FromCollection, WithHeadings, W
             "CI",
             "Asesor",
             "Supervisor",
-            "Coordinador"
+            "Coordinador",
+            "Estatus Discovery",
         ];
     }
 
     public function map($venta): array
     {
+        $estatuses = BaitEstatus::all()->pluck('descripcion', 'id')->toArray();
+
         $tiendaData = $this->getTiendaData($venta->tienda_id);
         $personalData = $this->getPersonal($venta->personal_id);
         $supervisorData = $this->getPersonal($venta->supervisor_id);
@@ -176,6 +180,7 @@ class RespondioExport implements ShouldAutoSize, FromCollection, WithHeadings, W
             $personalData['nombre_apellido'],
             $supervisorData['nombre_apellido'],
             $coordinadorData['nombre_apellido'],
+            $estatuses[$venta->estatus_id] ?? '',
         ];
     }
 }

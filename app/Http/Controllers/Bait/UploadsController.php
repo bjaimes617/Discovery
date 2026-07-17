@@ -122,7 +122,8 @@ class UploadsController extends Controller
                     'bait_ventas.validador_alta',
                     'bait_ventas.personal_id',
                     'bait_ventas.supervisor_id',
-                    'bait_ventas.coordinador_id'
+                    'bait_ventas.coordinador_id',
+                    'bait_ventas.estatus_id'
                 )->leftjoin('bait_ventas', 'bait_respondio.idcontacto', 'bait_ventas.idcontacto')
                     ->whereBetween('bait_respondio.created_at', [
                         $init->copy()->format('Y-m-d H:m:s'),
