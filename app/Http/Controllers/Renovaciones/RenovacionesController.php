@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\renovaciones\renovacionesVentasModel;
 use App\Models\renovaciones\renovacionesHistoricoModel;
 use App\Imports\Renovaciones\SeguimientosImports;
+use App\Imports\Renovaciones\ChangeSalesPayment;
 use App\Models\Personal;
 
 use Carbon\Carbon;
@@ -16,18 +17,23 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class RenovacionesController extends Controller
 {
- 
-    private $plazos, $campania, $corddefault;
 
-    public function __construct(){
-      
+    private $plazos, $campania, $corddefault, $tipo;
+
+    public function __construct()
+    {
+
         $this->plazos = [12, 18];
-        $this->campania =6;
-        $this->corddefault = [23.594941655693194 , -102.85721280844986]; #mexico
+        $this->tipo = [
+            'seguimientos' => 'Seguimientos',
+            'pagos'  => 'CargarVentas Pagadas',
+        ];
+        $this->campania = 6;
+        $this->corddefault = [23.594941655693194, -102.85721280844986]; #mexico
     }
-        
+
     public function checkOrderOnix(Request $request)
-    {       
+    {
         if ($request->ajax()) {
             $numero_portar = trim($request->ordenonix);
 
@@ -44,13 +50,13 @@ class RenovacionesController extends Controller
             $venta = $query->orderBy('created_at', 'desc')->first();
 
             if ($venta != null) {
-                 return response()->json(false);
+                return response()->json(false);
             }
 
             return response()->json(true);
         }
     }
-    
+
     public function index()
     {
         $cargo = "";
@@ -95,8 +101,9 @@ class RenovacionesController extends Controller
         ]);
     }
 
-    public function search(Request $request){
-       
+    public function search(Request $request)
+    {
+
         $fecha = explode("-", $request->fecha);
         $data = array();
         $arreglo = array();
@@ -104,7 +111,7 @@ class RenovacionesController extends Controller
         $end = carbon::createFromFormat('d/m/Y', trim($fecha[1]));
 
         $sql = renovacionesVentasModel::whereBetween('renovaciones_ventas.created_at', array($init->copy()->startOfDay(), $end->copy()->endOfDay()));
-       
+
         $cargo = "";
         ///validamos si la persona tiene ficha de personal
         if (Auth::user()->ficha_personal == "Si") {
@@ -136,40 +143,57 @@ class RenovacionesController extends Controller
         }
 
         if (Auth::user()->ficha_personal == "Si" || Auth::user()->hasPermission('renovaciones.administrativo')) {
-            $data = $sql->orderBy('created_at', 'DESC')->get();          
+            $data = $sql->orderBy('created_at', 'DESC')->get();
         }
-      
+
         if ($request->numero_orden_onix != "" && $init->diffInDays($end) == 0 && $request->supervisor == "todos") {
             $sql2 = renovacionesVentasModel::where('numero_orden_onix', $request->numero_orden_onix);
             switch ($cargo):
                 case "Operador":
-                    $sql2->where("renovaciones_ventas.personal_id", "=", Auth::user()->personal->id);                    
+                    $sql2->where("renovaciones_ventas.personal_id", "=", Auth::user()->personal->id);
                     break;
                 case 'Supervisor':
-                    $sql2->where("renovaciones_ventas.supervisor_id", "=", Auth::user()->personal->id);                  
+                    $sql2->where("renovaciones_ventas.supervisor_id", "=", Auth::user()->personal->id);
                     break;
                 case 'Coordinador':
-                    $sql2->where('renovaciones_ventas.coordinador_id', '=', Auth::user()->personal->id);                 
+                    $sql2->where('renovaciones_ventas.coordinador_id', '=', Auth::user()->personal->id);
                     break;
             endswitch;
 
             if (Auth::user()->ficha_personal == "Si" || Auth::user()->hasPermission('renovaciones.administrativo')) {
                 $data = $sql2->orderBy('created_at', 'DESC')->get();
-             
             }
         }
         $editarhtml = "";
         $deleteHtml = "";
-       
-        foreach ($data as $result) {           
+
+        foreach ($data as $result) {
             $histotoque             = $result->RelationHistorico();
             $row["id"]              = $result->id;
             $row["creado"]          = date('d/m/Y', strtotime($result->created_at));
-            $row["hora"]            = date('h:i A', strtotime($result->created_at));        
+            $row["hora"]            = date('h:i A', strtotime($result->created_at));
+
+            $tripleta = null;
+
+            switch ($result->tripleta) {
+                case null:
+                    $tripleta = "No Disponible";
+                    break;
+                case "CARGADA":
+                    $tripleta = '<span class="badge badge-success">' . $result->tripleta . '</span>';
+                    break;
+                case "FUERA DE TIEMPO":
+                    $tripleta = '<span class="badge badge-danger">' . $result->tripleta . '</span>';
+                    break;
+                default:
+                    $tripleta =  $result->tripleta;
+                    break;
+            }
+            $row["tripleta"]        = $tripleta;
             $row["dn"]              = $result->dn;
             $row["nombreapellido"]  = $result->nombre_cliente;
             $row["agente"]          = $result->RelationUser != null ? $result->RelationUser->nombre_apellido : "N/D";
-            $row["supervisor"]      = $result->supervisor_id != null ? $result->relationSupervisor->RelationUser->nombre_apellido : "N/D";           
+            $row["supervisor"]      = $result->supervisor_id != null ? $result->relationSupervisor->RelationUser->nombre_apellido : "N/D";
             $row["orden"]           = $result->numero_orden_onix;
             $row["estatus"]         = '<span class="badge badge-success">' . $result->relationEstatus->descripcion . '</span>';
             $vent = 'onclick="DestroyVentas(' . $result->id . '); "';
@@ -182,14 +206,24 @@ class RenovacionesController extends Controller
                     $deleteHtml = Auth::user()->HasPermission('renovaciones.delete') ?
                         '<button type="button"  ' . $vent . ' class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="top" title="Remover" ><i class="fa fa-trash"</i></button>'
                         : null;
-                    break;                
+                    break;
+                case 11:
+                    $row["estatus"] = '<span class="badge badge-success">' . $result->relationEstatus->descripcion . '</span>';
+
+                    $histotoque         = $histotoque->orderby('id', 'desc')->first();
+                    $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Comentarios: " . $histotoque->observaciones : "N/D";
+                    $icon = '<i class="fas fa-check-circle"></i>';
+                    $editarhtml = "";
+                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-success"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
+                        ' . $icon . '</button>';
+                    break;
                 default:
                     $row["estatus"] = '<span class="badge badge-info">' . $result->relationEstatus->descripcion . '</span>';
                     $histotoque         = $histotoque->orderby('id', 'desc')->first();
-                    $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Comentarios: " . $histotoque->observaciones . "\n Observacion: ".$histotoque->relationObservaciones->descripcion : "N/D";
+                    $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Comentarios: " . $histotoque->observaciones . "\n Observacion: " . $histotoque->relationObservaciones->descripcion : "N/D";
                     $icon = '<i class="fas fa-info-circle"></i>';
                     $editarhtml = "";
-                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-primary"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
+                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-warning"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
                         ' . $icon . '</button>';
                     break;
             }
@@ -212,8 +246,8 @@ class RenovacionesController extends Controller
     }
 
     public function create()
-    {       
-         return view('renovaciones.create')->with(["plazos"=>$this->plazos,"cordmap"=>json_encode($this->corddefault)]);
+    {
+        return view('renovaciones.create')->with(["plazos" => $this->plazos, "cordmap" => json_encode($this->corddefault)]);
     }
 
     /**
@@ -221,23 +255,23 @@ class RenovacionesController extends Controller
      */
     public function store(Request $request)
     {
-      
+
         $user = Auth::user();
         try {
-        $venta = new renovacionesVentasModel();
-        $venta->dn              = $request->dn;
-        $venta->nombre_cliente  = mb_strtoupper(strtolower($request->nombre_apellido));
-        $venta->equipo          = mb_strtoupper(strtolower($request->equipo));
-        $venta->plazo           = $request->plazos;
-        $venta->direccion_entrega   =  mb_strtoupper(strtolower($request->direccion));
-        $venta->entrega_en      = mb_strtoupper(strtolower($request->entrega_en));
-        $venta->numero_orden_onix = $request->ordenonix;
-        $venta->precio_equipo   = $request->precio;      
-        $venta->latitud         = $request->latitud;
-        $venta->longitud        = $request->longitud;      
-        $venta->referencias     =  mb_strtoupper(strtolower($request->referencia));
-        $venta->observaciones   =  mb_strtoupper(strtolower($request->observaciones));
-        
+            $venta = new renovacionesVentasModel();
+            $venta->dn              = $request->dn;
+            $venta->nombre_cliente  = mb_strtoupper(strtolower($request->nombre_apellido));
+            $venta->equipo          = mb_strtoupper(strtolower($request->equipo));
+            $venta->plazo           = $request->plazos;
+            $venta->direccion_entrega   =  mb_strtoupper(strtolower($request->direccion));
+            $venta->entrega_en      = mb_strtoupper(strtolower($request->entrega_en));
+            $venta->numero_orden_onix = $request->ordenonix;
+            $venta->precio_equipo   = $request->precio;
+            $venta->latitud         = $request->latitud;
+            $venta->longitud        = $request->longitud;
+            $venta->referencias     =  mb_strtoupper(strtolower($request->referencia));
+            $venta->observaciones   =  mb_strtoupper(strtolower($request->observaciones));
+
             if ($user->personal !== null) {
                 if ($user->personal->cargo_id == 4) {
                     $supervisor     = $user->personal->id;
@@ -270,8 +304,6 @@ class RenovacionesController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error al guardar la venta: ' . $e->getMessage());
         }
-
-        
     }
 
     /**
@@ -286,13 +318,13 @@ class RenovacionesController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-    {      
+    {
         $venta = renovacionesVentasModel::find($id);
         $latitud = (float)$venta->latitud;
         $longitud = (float)$venta->longitud;
-        $cordenada = [$latitud , $longitud];
-      
-        return view('renovaciones.edit')->with(["plazos"=>$this->plazos,"cordmap"=>json_encode($cordenada),"venta"=>$venta]);
+        $cordenada = [$latitud, $longitud];
+
+        return view('renovaciones.edit')->with(["plazos" => $this->plazos, "cordmap" => json_encode($cordenada), "venta" => $venta]);
     }
 
     /**
@@ -300,7 +332,7 @@ class RenovacionesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
+
         $user = Auth::user();
         try {
             $venta = renovacionesVentasModel::find($id);
@@ -311,12 +343,12 @@ class RenovacionesController extends Controller
             $venta->direccion_entrega   =  mb_strtoupper(strtolower($request->direccion));
             $venta->entrega_en      = mb_strtoupper(strtolower($request->entrega_en));
             $venta->numero_orden_onix = $request->ordenonix;
-            $venta->precio_equipo   = $request->precio;      
+            $venta->precio_equipo   = $request->precio;
             $venta->latitud         = $request->latitud;
-            $venta->longitud        = $request->longitud;      
+            $venta->longitud        = $request->longitud;
             $venta->referencias     =  mb_strtoupper(strtolower($request->referencia));
             $venta->observaciones   =  mb_strtoupper(strtolower($request->observaciones));
-        
+
             $venta->estatus_id  = 1;
             $venta->save();
 
@@ -340,11 +372,11 @@ class RenovacionesController extends Controller
     {
         try {
             $venta = renovacionesVentasModel::find($id);
-            if($venta != null){
-                $venta->delete();   
+            if ($venta != null) {
+                $venta->delete();
                 return back()->with('success', 'Venta eliminada Correctamente.');
             }
-                return back()->with('error', 'Error al eliminar la venta: Venta no encontrada.');
+            return back()->with('error', 'Error al eliminar la venta: Venta no encontrada.');
         } catch (\Exception $e) {
             return back()->with('error', 'Error al eliminar la venta: ' . $e->getMessage());
         }
@@ -352,14 +384,40 @@ class RenovacionesController extends Controller
 
     public function indexImport()
     {
-        return view('renovaciones.uploads.index');
+        $this->tipo = [
+            'seguimientos' => 'Seguimientos',
+            'pagos'  => 'Procesamiento de Ventas',
+        ];
+        return view('renovaciones.uploads.index')->with(['tipo' => $this->tipo]);
     }
 
     public function StorageImport(Request $request)
     {
-        $file = $request->file('archivo');
-        $import = new SeguimientosImports();
-        Excel::import($import, $file);
-        return back()->with('success', 'Seguimientos importados correctamente');
+        try {
+            switch ($request->tipo) {
+                case "pagos":
+                    $file = $request->file('archivo');
+                    $import = new ChangeSalesPayment();
+                    Excel::import($import, $file);
+                    return back()->with('successImport', 'Archivo de Pagos importados correctamente');
+                    break;
+                case "seguimiento":
+                    $file = $request->file('archivo');
+                    $import = new SeguimientosImports();
+                    Excel::import($import, $file);
+                    return back()->with('successImport', 'Seguimientos importados correctamente');
+                    break;
+                default:
+                    $file = $request->file('archivo');
+                    $import = new SeguimientosImports();
+                    Excel::import($import, $file);
+                    return back()->with('success', 'Seguimientos importados correctamente');
+                    break;
+            }
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            return back()->with('error', 'Error al importar el archivo: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al importar el archivo: ' . $e->getMessage());
+        }
     }
 }

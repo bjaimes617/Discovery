@@ -51,13 +51,28 @@
                         </div>
                     </div>
                     <div class="kt-portlet__body kt-portlet__body--fit ml-4 mr-4">
-                        <label>Fecha:</label>
-                        <div class="form-group ">
-                            <div class='input-group' id='fechar'>
-                                <input type='text' class="form-control" autocomplete="off"
-                                    required name="fecha" id="fecha" />
-                                <div class="input-group-append">
-                                    <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                        <div class="row">
+                            <div class=col-lg-6>
+                                <label>Fecha:</label>
+                                <div class="form-group">
+                                    <div class='input-group' id='fechar'>
+                                        <input type='text' class="form-control" autocomplete="off"
+                                            required name="fecha" id="fecha" />
+                                        <div class="input-group-append">
+                                            <span class="input-group-text"><i class="la la-calendar-check-o"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class=col-lg-6>
+                                <label>Supervisor:</label>
+                                <div class="form-group">
+                                    <select name="supervisores" id="supervisores" class="form-control">
+                                        <option value="0">Todos</option>
+                                        @foreach ($supervisores as $supervisor)
+                                            <option value="{{ $supervisor->id }}">{{ $supervisor->nombre_apellido }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>

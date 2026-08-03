@@ -27,7 +27,11 @@
             <div class="alert alert-light alert-elevate fade show" role="alert">
                 <div class="alert-icon"><i class="flaticon-businesswoman kt-font-brand"></i></div>
                 <div class="alert-text">                  
-                    Descargue el archivo de ejemplo, y asegurese de rellenar cada celda seg&uacute;n las indicaciones <small>(Ver los comentarios en el encabezado del archivo)</small>. <a class="kt-link kt-font-bold" href="{{ Storage::disk('public')->url('formato_Seguimientos_renovaciones.xlsx') }}">Presione Aqu&iacute;</a>
+                    Descargue el archivo de ejemplo, y asegurese de rellenar cada celda seg&uacute;n las indicaciones <small>(Ver los comentarios en el encabezado del archivo)</small>. <a class="kt-link kt-font-bold" href="{{ Storage::disk('public')->url('formato_seguimientos_renovaciones.xlsx') }}">Presione Aqu&iacute;</a>
+                    @if(Auth::user()->hasPermission('renovaciones.cargador.payments'))
+                    <br>
+                    Descargue el archivo de ejemplo para <span style="color:red; font-weight: bold;">Cargar los Pagos </span><a class="kt-link kt-font-bold" href="{{ Storage::disk('public')->url('formato_pagos_renovaciones.xlsx') }}">Presione Aqu&iacute;</a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -39,7 +43,7 @@
                     <i class="kt-font-brand flaticon2-user"></i>
                 </span>
                 <h3 class="kt-portlet__head-title">
-                   Carga de Seguimientos <small>Utilice el formato suministrado para realizar el registro de los seguimientos de las Ventas.</small>
+                   Carga de Seguimientos <small>Utilice el formato suministrado para realizar el registro de los seguimientos de las Ventas.</small>                
                 </h3>
             </div>                    
         </div>
@@ -47,18 +51,39 @@
             @include('message.massive')
             <form action="{{ route('renovaciones.import.storage') }}" method="POST" id="cargadorArchivo" enctype="multipart/form-data">
             @csrf
-                <div class="form-group">
-                    <label>Seleccione el Archivo de Carga</label>
-                    <div class="input-group">
-                        <div class="custom-file col-lg-6">
-                            <input type="file" class="custom-file-input" id="archivo" name="archivo">
-                            <label class="custom-file-label" for="customFile">Bucar Achivo en...</label>
+                <div class="row">
+                @if(Auth::user()->hasPermission('renovaciones.cargador.payments'))
+                <div class="col-lg-4 col-md-12">
+                    <label>Tipo de Carga</label>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="custom-file">
+                            <select name="tipo" id="tipo" required class="select form-control">
+                                <option value="">[SELECCIONE]</option>
+                                    @foreach ($tipo as $k => $value)
+                                        <option value="{{ $k }}">{{ $value }}</option>
+                                    @endforeach                                
+                                </select>
+                            </div>                       
                         </div>
-                        <span class="input-group-append">
-                            <button class="btn btn-primary" type="submit">Cargar</button>
-                        </span>
                     </div>
-                </div>            
+                </div> 
+                @endif
+                <div class="col-lg-6 col-md-12">
+                    <label>Seleccione el Archivo de Carga</label>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="custom-file">                            
+                                <input type="file" class="custom-file-input" id="archivo" name="archivo">
+                                <label class="custom-file-label" for="customFile">Bucar Achivo en...</label>
+                            </div>
+                            <span class="input-group-append">
+                                <button class="btn btn-primary" type="submit">Cargar</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>  
+            </div>          
             </form>
         </div>
     </div>
@@ -68,9 +93,9 @@
 <!-- Delete -->
 
 @endsection
+
 @push('styles')
-
-
+<link media="all" type="text/css" rel="stylesheet" href="{{asset('assets/plugins/general/select2/select2-bootstrap4-theme/select2-bootstrap4.css')}}">
 @endpush
 @push('scripts')
 <script src="{{ asset('js/renovaciones/resources.js') }}"  type="text/javascript"></script> 

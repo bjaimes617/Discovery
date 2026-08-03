@@ -391,6 +391,7 @@ $("#baitSearch").validate({
                         { mData: "agente" },
                         { mData: "supervisor" },
                         { mData: "estatus" },
+                        { mData: "concentra" },
                         { mData: "acciones" },
                     ],
                     createdRow: function (row, data, dataIndex) {
@@ -772,6 +773,7 @@ $(function () {
                 searchable: true,
             },
             { data: "estatus", name: "estatus", searchable: true },
+            { data: "concentra", name: "concentra", searchable: false },
             { data: "autorizar", name: "autorizar" },
             {
                 data: "acciones",

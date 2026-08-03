@@ -22,7 +22,7 @@ use Yajra\DataTables\DataTables;
 class Backoffice extends Controller
 
 {
-    private $sexo, $fvc, $gestion, $modalidades, $campania, $sns, $validatebo, $validacionalta;
+    private $sexo, $fvc, $gestion, $modalidades, $campania, $sns, $validatebo, $validacionalta, $tipo;
 
     public function __construct($campania = 5)
     {
@@ -274,6 +274,7 @@ class Backoffice extends Controller
 
     public function SearchPostventa()
     {
+        $estatus_concentra = BaitEstatusConcentra::pluck('descripcion', 'id')->toArray();
 
         $query = DB::table('bait_ventas as c')
             ->select(
@@ -283,11 +284,13 @@ class Backoffice extends Controller
                 'c.nombre_apellido',
                 'c.fvc',
                 'c.created_at as registrado',
+                'c.bait_concentra_id as concentra',
                 'sup.nombre_apellido as supervisor',
                 'ag.nombre_apellido as agente',
                 'e.descripcion as estatus',
+                'c.estatus_id as estatusid',
                 'c.estatus_intelix',
-                'c.autorizar'
+                'c.autorizar',
             )->leftJoin('personal as s', 's.id', '=', 'c.supervisor_id')
             ->leftJoin('users as sup', 'sup.id', '=', 's.user_id')
             ->leftJoin('personal as a', 'a.id', '=', 'c.personal_id')
@@ -319,11 +322,25 @@ class Backoffice extends Controller
             ->editColumn('registrado', function ($row) {
                 return Carbon::parse($row->registrado)->format('d/m/Y');
             })
+            ->editColumn('estatus', function ($row) {
+                switch ($row->estatusid) {
+                    case "12": // PAGADAS
+                        $form = '<span class="badge badge-success">' . $row->estatus . '</span>';
+                        break;
+                    default:
+                        $form = '<span class="badge badge-warning">' . $row->estatus . '</span>';
+                        break;
+                }
+                return $form;
+            })
             ->editColumn('agente', function ($row) {
                 return $row->agente == null ? 'N/D' : $row->agente;
             })
             ->editColumn('supervisor', function ($row) {
                 return $row->supervisor == null ? 'N/D' : $row->supervisor;
+            })
+            ->editColumn('concentra', function ($row) use ($estatus_concentra) {
+                return $row->concentra != null ? $estatus_concentra[$row->concentra] : "N/D";
             })
             ->editColumn('ciclo_vida', function ($row) {
                 $respondio = BaitRespondio::where('idcontacto', $row->idcontacto)->orderby('created_at', 'DESC')->limit(1)->first();
@@ -342,13 +359,25 @@ class Backoffice extends Controller
             })
             ->addColumn('acciones', function ($row) {
 
-                $buttondelete = '<button class="btn btn-danger btn-sm btn-icon" onclick="EliminarVenta(' . $row->id . ')" id="eliminarsales' . $row->id . '" data-href="' . route('bait.backoffice.postventa.delete', $row->id) . '" data-toggle="tooltip" data-placement="top" title="Eliminar"><i class="fas fa-trash"></i></button>';
-
-                $buttonView = '<button class="btn btn-primary btn-sm btn-icon" data-href="' . route('bait.backoffice.postventa.historico') . '" onclick="VisualizarHistoricoVenta(' . $row->id . ')" id="historicoshow' . $row->id . '" data-toggle="tooltip" data-placement="top" title="Ver"><i class="fas fa-eye"></i></button>';
-                $form = '<div class="btn-group">' . $buttonView . $buttondelete . '</div>';
+                switch ($row->estatusid) {
+                    case "12": // PAGADAS
+                        $histotoque      = BaitHistoricos::where('bait_ventas_id', $row->id)->orderby('id', 'desc')->first();
+                        $textoParaCopiar = $histotoque != null ? 'Pagada el: ' . Carbon::parse($histotoque->pagada_el)->format('d/m/Y') . "\n Observaciones: " . $histotoque->observaciones : "N/D";
+                        $icon = '<i class="fas fa-money-bill"></i>';
+                        $editarhtml = "";
+                        $buttondelete = '<button type="button" class="btn btn-sm btn-success  btn-icon"  data-text="' . $textoParaCopiar . '"  id="button' . $row->id . '" onclick="CopyText(' . $row->id . ');" data-estatus="' . $row->estatusid . '" data-toggle="tooltip" data-placement="top" title="Observaciones" > 
+                        ' . $icon . '</button>';
+                        $form = '<div class="btn-group">' . $editarhtml . $buttondelete . '</div>';
+                        break;
+                    default:
+                        $buttondelete = '';
+                        $buttonView = '<button class="btn btn-primary btn-sm btn-icon" data-href="' . route('bait.backoffice.postventa.historico') . '" onclick="VisualizarHistoricoVenta(' . $row->id . ')" id="historicoshow' . $row->id . '" data-toggle="tooltip" data-placement="top" title="Ver"><i class="fas fa-eye"></i></button>';
+                        $form = '<div class="btn-group">' . $buttonView . $buttondelete . '</div>';
+                        break;
+                }
                 return $form;
             })
-            ->rawColumns(['acciones', 'fvc', 'estatus_intelix', 'autorizar'])
+            ->rawColumns(['acciones', 'fvc', 'estatus_intelix', 'autorizar', 'estatus'])
             ->make(true);
     }
 

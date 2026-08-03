@@ -122,7 +122,7 @@ class ImportOperadores implements ToCollection, WithHeadingRow, WithValidation
                 //$mail = $user->notify(new NewUser($data));
 
             }
-            Session::flash('success', 'El archivo fue cargado exitosamente por favor valide los registros.');
+            Session::flash('successImport', 'El archivo fue cargado exitosamente por favor valide los registros.');
             return true;
         } catch (\Exception $e) {
             Session::flash('error', 'Ocurrio un error al registrar. ' . $e->getMessage());

@@ -1,18 +1,20 @@
-
-
 $(document).ready(function () {
+    $("#fecha")
+        .daterangepicker({
+            locale: {
+                format: "DD/MM/YYYY",
+            },
+            buttonClasses: "btn",
+            applyClass: "btn-primary",
+            cancelClass: "btn-secondary",
+        })
+        .on("change", function (e) {
+            UpdateDisplayAll();
+        });
 
-    $("#fecha").daterangepicker({
-    locale: {
-        format: "DD/MM/YYYY",
-    },
-    buttonClasses: "btn",
-    applyClass: "btn-primary",
-    cancelClass: "btn-secondary",
-}).on('change', function(e) {
-    UpdateDisplayAll();
-});
-
+    $("#supervisores").on("change", function (e) {
+        UpdateDisplayAll();
+    });
     // destroy datatable if exists
     if ($.fn.DataTable.isDataTable("#metricasusers")) {
         $("#metricasusers").DataTable().destroy();
@@ -28,45 +30,40 @@ $(document).ready(function () {
     });
 
     $("#table-asignados").DataTable({
-                responsive: true,
-                autoWidth: false,
-                processing:
-                    "<i class='fas fa-spinner fa-spin'></i> Cargando...",
-                bPaginate: true,
-                bProcessing: true,
-                order: [[0, "asc"]],
-                dom: 'Blfrtip',
-                buttons: {
-                    buttons: [
-                        'copy', 'csv', 'excel'
-                    ],
-                    dom: {
-                        button: {
-                            className: 'btn btn-primary'
-                        }
-                    }
-                }
+        responsive: true,
+        autoWidth: false,
+        lengthMenu: [25, 50, 250, 500, 1000, -1],
+        processing: "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+        bPaginate: true,
+        bProcessing: true,
+        order: [[0, "asc"]],
+        dom: "Blfrtip",
+        buttons: {
+            buttons: ["copy", "csv", "excel"],
+            dom: {
+                button: {
+                    className: "btn btn-primary",
+                },
+            },
+        },
     });
 
     $("#table-notipificado").DataTable({
-                responsive: true,
-                autoWidth: false,
-                processing:
-                    "<i class='fas fa-spinner fa-spin'></i> Cargando...",
-                bPaginate: true,
-                bProcessing: true,
-                order: [[0, "asc"]],
-                dom: 'Blfrtip',
-                buttons: {
-                    buttons: [
-                        'copy', 'csv', 'excel'
-                    ],
-                    dom: {
-                        button: {
-                            className: 'btn btn-primary'
-                        }
-                    }
-                }
+        responsive: true,
+        autoWidth: false,
+        processing: "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+        bPaginate: true,
+        bProcessing: true,
+        order: [[0, "asc"]],
+        dom: "Blfrtip",
+        buttons: {
+            buttons: ["copy", "csv", "excel"],
+            dom: {
+                button: {
+                    className: "btn btn-primary",
+                },
+            },
+        },
     });
 
     var refreshInterval = null;
@@ -86,7 +83,7 @@ $(document).ready(function () {
         }
 
         // 3. Llamamos a la función inmediatamente (opcional pero recomendado)
-       // UpdateDisplayAll();
+        // UpdateDisplayAll();
 
         // 4. Creamos el nuevo intervalo
         refreshInterval = setInterval(function () {
@@ -104,6 +101,7 @@ function UpdateDisplayAll() {
             $("[name=_token]").val() ||
             $('meta[name="csrf-token"]').attr("content"),
         fecha: $("#fecha").val(),
+        supervisor: $("#supervisores").val(),
     };
 
     $.ajax({
@@ -113,8 +111,8 @@ function UpdateDisplayAll() {
         dataType: "json",
         success: function (response) {
             TableOperadores(response[0]);
-            TableLeadAsignados(response[1]);     
-            TableNotipificado(response[2]);  
+            TableLeadAsignados(response[1]);
+            TableNotipificado(response[2]);
         },
         error: function (xhr) {
             toastr.error("Error updating dashboard data");
@@ -122,8 +120,7 @@ function UpdateDisplayAll() {
     });
 }
 
-function TableOperadores(response){
-
+function TableOperadores(response) {
     if ($.fn.DataTable.isDataTable("#metricasusers")) {
         $("#metricasusers").DataTable().destroy();
     }
@@ -140,9 +137,7 @@ function TableOperadores(response){
     $("#stat-contactoAlead").text(response.contacto_a_lead + "%");
     $("#stat-no_cargado").text(response.no_cargado);
     $("#stat-rechazadas").text(response.rechazadas);
-    $("#stat-conversacionXventa").text(
-        response.conversacionXventa + "%",
-    );
+    $("#stat-conversacionXventa").text(response.conversacionXventa + "%");
 
     // Update table
     var tbody = $("#table-usuarios-body");
@@ -161,10 +156,7 @@ function TableOperadores(response){
         tr.append("<td>" + usuario.meta + "</td>");
 
         var cargadasHtml = "";
-        if (
-            parseInt(usuario.cargadas) <
-            parseInt(usuario.venta_respondido)
-        ) {
+        if (parseInt(usuario.cargadas) < parseInt(usuario.venta_respondido)) {
             cargadasHtml =
                 '<span style="color: red; font-weight: bold;"><i class="fas fa-times-circle"></i><span> ';
         }
@@ -191,16 +183,14 @@ function TableOperadores(response){
     $("#metricasusers").DataTable({
         responsive: true,
         autoWidth: false,
-        processing:
-            "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+        processing: "<i class='fas fa-spinner fa-spin'></i> Cargando...",
         bPaginate: true,
         bProcessing: true,
         order: [[0, "asc"]],
     });
 }
 
-function TableLeadAsignados(response){
-
+function TableLeadAsignados(response) {
     if ($.fn.DataTable.isDataTable("#table-asignados")) {
         $("#table-asignados").DataTable().destroy();
     }
@@ -223,27 +213,25 @@ function TableLeadAsignados(response){
     $("#table-asignados").DataTable({
         responsive: true,
         autoWidth: false,
-        processing:
-            "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+        lengthMenu: [25, 50, 250, 500, 1000, -1],
+        processing: "<i class='fas fa-spinner fa-spin'></i> Cargando...",
         bPaginate: true,
         bProcessing: true,
         order: [[0, "asc"]],
-        dom: 'Blfrtip',
+        dom: "Blfrtip",
         buttons: {
-            buttons: [
-                'copy', 'csv', 'excel'
-            ],
+            buttons: ["copy", "csv", "excel"],
             dom: {
                 button: {
-                    className: 'btn btn-primary'
-                }
-            }
-        }
+                    className: "btn btn-primary",
+                },
+            },
+        },
     });
 }
 
-function TableNotipificado(response){
-     if ($.fn.DataTable.isDataTable("#table-notipificado")) {
+function TableNotipificado(response) {
+    if ($.fn.DataTable.isDataTable("#table-notipificado")) {
         $("#table-notipificado").DataTable().destroy();
     }
 
@@ -251,7 +239,7 @@ function TableNotipificado(response){
     tbody.empty();
 
     $.each(response, function (key, item) {
-        var tr = $("<tr>");        
+        var tr = $("<tr>");
         tr.append("<td>" + item.fecha + "</td>");
         tr.append("<td>" + item.hora + "</td>");
         tr.append("<td>" + item.idcontacto + "</td>");
@@ -259,29 +247,25 @@ function TableNotipificado(response){
         tr.append("<td>" + item.ciclo_de_vida + "</td>");
         tr.append("<td>" + item.numero_contacto + "</td>");
         tr.append("<td>" + item.agente + "</td>");
-        
+
         tbody.append(tr);
     });
 
     $("#table-notipificado").DataTable({
         responsive: true,
         autoWidth: false,
-        processing:
-            "<i class='fas fa-spinner fa-spin'></i> Cargando...",
+        processing: "<i class='fas fa-spinner fa-spin'></i> Cargando...",
         bPaginate: true,
         bProcessing: true,
         order: [[0, "asc"]],
-        dom: 'Blfrtip',
+        dom: "Blfrtip",
         buttons: {
-            buttons: [
-                'copy', 'csv', 'excel'
-            ],
+            buttons: ["copy", "csv", "excel"],
             dom: {
                 button: {
-                    className: 'btn btn-primary'
-                }
-            }
-        }
+                    className: "btn btn-primary",
+                },
+            },
+        },
     });
 }
-

@@ -21,9 +21,11 @@ class DashboardController extends Controller
 
 
     //protected $redirectTo = '/login';
+    private $campania;
 
-    public function __construct()
+    public function __construct($campania = null)
     {
+        $this->campania = $campania;
         $this->middleware(['auth', 'verified', 'check.password']);
     }
 
@@ -33,68 +35,95 @@ class DashboardController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {        
-     
+    {
+
         return view('dashboard.index');
     }
 
     public function bait(request $request)
     {
-
-        if ($request->method() == "GET") {
-            $inicio = Carbon::now()->startOfDay();
-            $fin    = $inicio->copy()->endOfDay();         
-            $response = false;
-        } else {
-            $response = true;
-            $fecha = explode("-", $request->fecha);
-            $inicio = Carbon::createFromFormat('d/m/Y', trim($fecha[0]))->startOfDay();
-            $fin    = Carbon::createFromFormat('d/m/Y', trim($fecha[1]))->endOfDay();
-        }
-
-        $asignadosnoVentas = $this->asignadossinventas( $inicio ,$fin);
-         #calculamos por agente que ventas estan en discovery que no estan en respondi
-        $notipificadoRespond = $this->CargadasDiscoverySinRespondio($inicio,$fin);
-
-        $row = array();
-        $ciclos = array();
-        $usuariosrespond = array();
-        $conversacionnueva = 0;
-        $data   =  BaitRespondio::whereBetween('created_at', [$inicio, $fin])->cursor();
-        $cargo = "";
-
+        $this->campania = 5;
+        $idSupervisores = array();
         ///validamos si la persona tiene ficha de personal
         if (Auth::user()->ficha_personal == "Si") {
             $cargo = Auth::user()->personal->cargo->nombre_cargo;
+        } else {
+            $cargo = '';
+        }
+        switch ($cargo):
+            case 'Supervisor':
+                $supervisores = Personal::with(['RelationUser'])->select('personal.id', 'users.nombre_apellido')->where("personal.campana_id", "=",   $this->campania)
+                    ->where("personal.cargo_id", "=", 4)->where('personal.id', '=', Auth::user()->personal->id)
+                    ->join('users', 'personal.user_id', '=', 'users.id')
+                    ->orderBy('users.nombre_apellido')->get();
+                $idSupervisores = $supervisores->pluck('id');
+                break;
+            case 'Coordinador':
+                $supervisores = Personal::with(['RelationUser'])->select('personal.id', 'users.nombre_apellido')
+                    ->where("personal.campana_id", "=",  $this->campania)
+                    ->where("personal.cargo_id", "=", 4)->where('personal.jefe_inmediato_id', '=', Auth::user()->personal->id)
+                    ->join('users', 'personal.user_id', '=', 'users.id')->where('personal.estatus', 1)
+                    ->orderBy('users.nombre_apellido')->get();
+                $idSupervisores = $supervisores->pluck('id');
+                break;
+            default:
+                if (Auth::user()->hasPermission('bait.administrativo')) {
+                    $supervisores = Personal::with(['relationUser'])->select('personal.id', 'users.nombre_apellido')
+                        ->where("personal.campana_id", "=",  $this->campania)->where("personal.cargo_id", "=", 4)
+                        ->join('users', 'personal.user_id', '=', 'users.id')->where('personal.estatus', 1)
+                        ->orderBy('users.nombre_apellido')->get();
+                    $idSupervisores = $supervisores->pluck('id');
+                } else {
+                    $supervisores = array();
+                    $idSupervisores = array();
+                }
+        endswitch;
+
+        if ($request->method() == "GET") {
+
+            $inicio = Carbon::now()->startOfDay();
+            $fin    = $inicio->copy()->endOfDay();
+            $response = false;
+        } else {
+            $response = true;
+
+            $fecha = explode("-", $request->fecha);
+            $inicio = Carbon::createFromFormat('d/m/Y', trim($fecha[0]))->startOfDay();
+            $fin    = Carbon::createFromFormat('d/m/Y', trim($fecha[1]))->endOfDay();
+            $idSupervisores = $request->supervisor == 0 ? $idSupervisores : $idSupervisores->filter(function ($item) use ($request) {
+                return $item == $request->supervisor;
+            })->values();
         }
 
+        // Validar el rol del usuario para restringir las métricas
+        $usuariosrespond = Personal::whereIn("jefe_inmediato_id", $idSupervisores)
+            ->orWhereIn("id", $idSupervisores)
+            ->pluck("numero_empleado")->toArray();
+            
+        // Bandera para aplicar filtros adicionales en las consultas SQL
+        $solosusventas = false;
+        if ($cargo == 'Supervisor') {
+            $solosusventas = true;
+        }
+        if ($request->method() == 'POST' && $request->supervisor != 0) {
+            $solosusventas = true;
+        }
+
+        $asignadosnoVentas = $this->asignadossinventas($inicio, $fin, $solosusventas, $usuariosrespond);
+        #calculamos por agente que ventas estan en discovery que no estan en respondi
+        $notipificadoRespond = $this->CargadasDiscoverySinRespondio($inicio, $fin, $solosusventas, $idSupervisores);
+
+        $row = array();
+        $ciclos = array();
+        $conversacionnueva = 0;
+        $data   =  BaitRespondio::whereBetween('created_at', [$inicio, $fin])->cursor();
+
         ##Extraemos todos los ciclos de vida existentes
-        $data->each(function ($item) use (&$ciclos, &$usuariosrespond) {
+        $data->each(function ($item) use (&$ciclos) {
             if (!in_array($item->ciclo_de_vida, $ciclos)) {
                 $ciclos[] = $item->ciclo_de_vida;
             }
-
-            if (!array_key_exists($cedula = explode(" ", $item->usuario)[0], $usuariosrespond)) {
-                $cedula = explode(" ", $item->usuario);
-                $usuariosrespond[$cedula[0]] = $cedula[0];
-            }
         });
-
-        // Validar el rol del usuario para restringir las métricas
-        switch ($cargo):
-            case 'Supervisor':
-                // Si es Supervisor, obtenemos únicamente las cédulas de los asesores a su cargo
-                $usuariosrespond = Personal::where("jefe_inmediato_id", "=", Auth::user()->personal->id)
-                    ->orWhere("id", "=", Auth::user()->personal->id)
-                    ->pluck("numero_empleado")->toArray();
-                // Bandera para aplicar filtros adicionales en las consultas SQL
-                $solosusventas = true;
-                break;
-            default:
-                // Para otros roles (como Admin), se mostrarán las métricas de todos los asesores
-                $solosusventas = false;
-                break;
-        endswitch;
 
         usort($ciclos, function ($a, $b) {
             return strcmp($a, $b);
@@ -105,16 +134,17 @@ class DashboardController extends Controller
 
         // Filtramos las ventas: solo las del equipo si es supervisor, o todas si no lo es
         if ($solosusventas) {
-            $countventas = $sql->where("supervisor_id", Auth::user()->personal->id)->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();          
+            $countventas = $sql->whereIn("supervisor_id", $idSupervisores)->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();
         } else {
-            $countventas = $sql->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();           
-        }       
+            $countventas = $sql->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();
+        }
+
         #total Ingresadas a Intelix estatu
-        $ingresadas          = $countventas->whereNotIn('estatus_id', [1,3,4,5,6])->count();
-        
+        $ingresadas          = $countventas->whereNotIn('estatus_id', [1, 3, 4, 5, 6])->count();
+
         #rechazadas de auditorias
-        $rechazadas          = $countventas->whereIn('estatus_id', [3,6])->count();
-       
+        $rechazadas          = $countventas->whereIn('estatus_id', [3, 6])->count();
+
         $fvc24               = $countventas->where('fvc', 24)->count();
         $fvc48               = $countventas->where('fvc', 48)->count();
 
@@ -149,11 +179,14 @@ class DashboardController extends Controller
         #arreglo con los datos del usuario para metricas
         $Datospersonales = Personal::leftjoin("personal as superv", "superv.id", "personal.jefe_inmediato_id")
             ->leftjoin("users as superv_users", "superv_users.id", "superv.user_id")
-            ->leftjoin("users as user", "user.id", "personal.user_id")
-            ->whereIn("personal.numero_empleado", $usuariosrespond);
+            ->leftjoin("users as user", "user.id", "personal.user_id");
+
+        if ($solosusventas) {
+            $Datospersonales->whereIn("personal.numero_empleado", $usuariosrespond);
+        }
 
         ///arrays con informacion de supers y agentes en variable $personal, a;adimos los datos igual del supervisor puesto que tambien cargan ventas
-        $personal       = $Datospersonales->orWhereIn('personal.cargo_id',[3,4,7])->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
+        $personal       = $Datospersonales->orWhereIn('personal.cargo_id', [3, 4, 7])->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
         $super          = $Datospersonales->pluck("superv_users.nombre_apellido", "personal.numero_empleado")->toArray();
 
         $tablemetricas = array();
@@ -169,7 +202,7 @@ class DashboardController extends Controller
                 case "Asesor Ventas IA":
                 case "1 IA DANIELA":
                     // Los agentes IA no pertenecen al equipo de un supervisor, por lo que los ignoramos (continue)
-                    if ($cargo == "Supervisor") {
+                    if ($solosusventas) {
                         continue 2;
                     }
                     $cedula[0] = "Agente IA";
@@ -177,7 +210,7 @@ class DashboardController extends Controller
                     break;
                 case null:
                     // De igual forma, omitimos registros sin usuario para las métricas de supervisores
-                    if ($cargo == "Supervisor") {
+                    if ($solosusventas) {
                         continue 2;
                     }
                     $cedula[0] = "Sin Usuario";
@@ -185,7 +218,7 @@ class DashboardController extends Controller
                     break;
                 default:
                     $cedula = explode(" ", $countrespondlead->usuario);
-                    if ($cargo == "Supervisor") {
+                    if ($solosusventas) {
                         // Si la cédula del lead no está en la lista de agentes del supervisor, la saltamos
                         if (!in_array($cedula[0], $usuariosrespond)) {
                             continue 2;
@@ -222,13 +255,13 @@ class DashboardController extends Controller
                 $tablemetricas[$cedula[0]]["conversion"]     += $leads_asignados;
             }
         }
-    
+
         // Añadimos a los usuarios que tienen ventas cargadas pero que no tuvieron registros en bait_respondio (leads)
         foreach ($totalventascargadas as $cedula_ventas => $cargadas) {
             if (!array_key_exists($cedula_ventas, $tablemetricas)) {
-                                              
+
                 $nombre = array_key_exists($cedula_ventas, $personal) ? $personal[$cedula_ventas] : "<span class='badge badge-warning'><b> No Registrer Discovery: " . $cedula_ventas . "</b></span>";
-              //  dd($totalventascargadas,$cedula_ventas,$super);
+                //  dd($totalventascargadas,$cedula_ventas,$super);
                 $tablemetricas[$cedula_ventas] = array(
                     "supervisor" => $super[$cedula_ventas] ?? "No disponible",
                     "nombre"     => $nombre,
@@ -240,7 +273,7 @@ class DashboardController extends Controller
                 );
             }
         }
-    
+
         ### recalcular los porcentames de metas y conversiones de la tabla
         foreach ($tablemetricas as $key => $value) {
             if ($value["leads"] > 0) {
@@ -295,88 +328,88 @@ class DashboardController extends Controller
             "conversion_global" => array_search("Leads asignados", $totalciclos) ? round($sumaventascargadas /  array_search("Leads asignados", $totalciclos) * 100, 2) : 0,
             "usuarios" => $tablemetricas,
             "conversacionXventa" => $ventaXconversacion,
-           
+
         );
 
         if ($response) {
-            return response()->json([$row,$asignadosnoVentas,$notipificadoRespond]);
+            return response()->json([$row, $asignadosnoVentas, $notipificadoRespond]);
         } else {
-            return view('dashboard.bait', compact('row', 'asignadosnoVentas','notipificadoRespond'));
+            return view('dashboard.bait', compact('row', 'asignadosnoVentas', 'notipificadoRespond', 'supervisores'));
         }
     }
 
-    private function asignadossinventas($inicio, $fin)
+    private function asignadossinventas($inicio, $fin, $solosusventas = false, $usuariosrespond = [])
     {
-     
-            $ventas = BaitRespondio::select('idcontacto')->where('ciclo_de_vida', 'Ventas cargadas')->whereBetween('created_at', [$inicio, $fin])->pluck('idcontacto');
 
-            $contactosLeads = BaitRespondio::select('idcontacto')->where('ciclo_de_vida', 'Leads asignados')->whereNot(function ($query) use ($ventas) {
-                $query->whereIn('idcontacto', $ventas);
-            })->whereBetween('created_at', [$inicio, $fin])->pluck('idcontacto');
+        $ventas = BaitRespondio::select('idcontacto')->where('ciclo_de_vida', 'Ventas cargadas')->whereBetween('created_at', [$inicio, $fin])->pluck('idcontacto');
 
-            $bait = BaitRespondio::whereIn('idcontacto', $contactosLeads)
-                ->orderBy('created_at', 'DESC')
-                ->orderBy('id', 'DESC')
-                ->get()
-                ->unique('idcontacto');
+        $contactosLeads = BaitRespondio::select('idcontacto')->where('ciclo_de_vida', 'Leads asignados')->whereNot(function ($query) use ($ventas) {
+            $query->whereIn('idcontacto', $ventas);
+        })->whereBetween('created_at', [$inicio, $fin])->pluck('idcontacto');
 
-            $Datospersonales = Personal::leftjoin("personal as superv", "superv.id", "personal.jefe_inmediato_id")
-                ->leftjoin("users as superv_users", "superv_users.id", "superv.user_id")
-                ->leftjoin("users as user", "user.id", "personal.user_id");
+        $bait = BaitRespondio::whereIn('idcontacto', $contactosLeads)
+            ->orderBy('created_at', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->get()
+            ->unique('idcontacto');
 
-            ///arrays con informacion de supers y agentes
-            $personal       = $Datospersonales->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
-            $super          = $Datospersonales->pluck("superv_users.nombre_apellido", "personal.numero_empleado")->toArray();
-
-            $data = array();
-
-            foreach ($bait as $key => $value) {
-                $cedula = explode(" ", $value->usuario);
-                $leand["fecha"] = Carbon::create($value->created_at)->format('d/m/Y');
-                $leand["hora"] = Carbon::create($value->created_at)->format('H:i:s');
-                $leand["ciclo_de_vida"] = $value->ciclo_de_vida == "Leads asignados" ?
-                                '<span class="badge badge-warning"><b>' . $value->ciclo_de_vida . '</b></span>' :
-                                $value->ciclo_de_vida;
-                $leand["numero_contacto"] = $value->numero_contacto;
-                $leand["idcontacto"] = $value->idcontacto;
-                $leand["agente"]    = $personal[$cedula[0]] ?? $value->usuario;
-                $leand["supervisor"] = $super[$cedula[0]] ?? "- - ";
-                $data[] = $leand;
-            }
-            usort($data, function ($a, $b) {
-                return strcmp($a['agente'], $b['agente']);
+        if ($solosusventas && count($usuariosrespond) > 0) {
+            $bait = $bait->filter(function($item) use ($usuariosrespond) {
+                $cedula = explode(" ", $item->usuario)[0];
+                return in_array($cedula, $usuariosrespond);
             });
-
-            return$data;
-        
-    }
-
-    private function CargadasDiscoverySinRespondio($inicio, $fin)
-    {
-        $cargo = '';
-        
-        if (Auth::user()->ficha_personal == "Si") {
-            $cargo = Auth::user()->personal->cargo->nombre_cargo;
         }
 
+        $Datospersonales = Personal::leftjoin("personal as superv", "superv.id", "personal.jefe_inmediato_id")
+            ->leftjoin("users as superv_users", "superv_users.id", "superv.user_id")
+            ->leftjoin("users as user", "user.id", "personal.user_id");
+
+        ///arrays con informacion de supers y agentes
+        $personal       = $Datospersonales->pluck("user.nombre_apellido", "personal.numero_empleado")->toArray();
+        $super          = $Datospersonales->pluck("superv_users.nombre_apellido", "personal.numero_empleado")->toArray();
+
+        $data = array();
+
+        foreach ($bait as $key => $value) {
+            $cedula = explode(" ", $value->usuario);
+            $leand["fecha"] = Carbon::create($value->created_at)->format('d/m/Y');
+            $leand["hora"] = Carbon::create($value->created_at)->format('H:i:s');
+            $leand["ciclo_de_vida"] = $value->ciclo_de_vida == "Leads asignados" ?
+                '<span class="badge badge-warning"><b>' . $value->ciclo_de_vida . '</b></span>' :
+                $value->ciclo_de_vida;
+            $leand["numero_contacto"] = $value->numero_contacto;
+            $leand["idcontacto"] = $value->idcontacto;
+            $leand["agente"]    = $personal[$cedula[0]] ?? $value->usuario;
+            $leand["supervisor"] = $super[$cedula[0]] ?? "- - ";
+            $data[] = $leand;
+        }
+        usort($data, function ($a, $b) {
+            return strcmp($a['agente'], $b['agente']);
+        });
+
+        return $data;
+    }
+
+    private function CargadasDiscoverySinRespondio($inicio, $fin, $solosusventas = false, $idSupervisores = [])
+    {
         #ubicamos los id de contacto que registrados en discovery que no hemos recibido desde respondio.
-        $cargadas = BaitRespondio::where('ciclo_de_vida','Ventas Cargadas')           
+        $cargadas = BaitRespondio::where('ciclo_de_vida', 'Ventas Cargadas')
             ->whereBetween('bait_respondio.created_at', [$inicio, $fin])
             ->groupby('idcontacto')
             ->pluck('idcontacto');
 
         $noven = BaitVentas::with(['RelationUser'])
-            ->whereNotIn('idcontacto',$cargadas)
-            ->whereBetween('created_at', [$inicio, $fin]);          
+            ->whereNotIn('idcontacto', $cargadas)
+            ->whereBetween('created_at', [$inicio, $fin]);
 
-        if ($cargo == "Supervisor") {
-            $nocargada = $noven->where("supervisor_id", Auth::user()->personal->id)->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();          
+        if ($solosusventas) {
+            $nocargada = $noven->whereIn("supervisor_id", $idSupervisores)->get();
         } else {
-            $nocargada = $noven->whereBetween('bait_ventas.created_at', [$inicio, $fin])->get();           
-        }  
+            $nocargada = $noven->get();
+        }
 
         $data = array();
-   
+
         foreach ($nocargada as $key => $value) {
             $leand["fecha"] = Carbon::create($value->created_at)->format('d/m/Y');
             $leand["hora"] = Carbon::create($value->created_at)->format('H:i:s');
@@ -384,10 +417,10 @@ class DashboardController extends Controller
             $leand["portabilidad"] = $value->numero_portar;
             $leand["numero_contacto"] = $value->telefono_principal ? $value->telefono_principal : $value->numero_portar;
             $leand["idcontacto"] = $value->idcontacto;
-            $leand["agente"]    = $value->RelationUser ? $value->RelationUser->nombre_apellido : '- -';           
+            $leand["agente"]    = $value->RelationUser ? $value->RelationUser->nombre_apellido : '- -';
             $data[] = $leand;
         }
 
-        return $data;        
+        return $data;
     }
 }

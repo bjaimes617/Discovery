@@ -4,23 +4,31 @@ namespace App\Http\Controllers\Bait;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+
 use App\Imports\Bait\UploadBaitCM;
 use App\Imports\Bait\SeguimientosBackoffice;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\Bait\ChangePaymentsBait;
+
 use App\Models\bait\BaitVentas;
 use App\Models\bait\BaitHistoricos;
 use App\Models\bait\BaitRespondio;
-use Carbon\Carbon;
+
 use App\Exports\Bait\BaitExport;
 use App\Exports\Bait\RespondioExport;
 
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class UploadsController extends Controller
 {
-    private $typeReportes;
+    private $typeReportes, $tipo;
 
     public function __construct()
     {
+        $this->tipo = [
+            'seguimientos' => 'Seguimientos Bait',
+            'pagos'  => 'Procesar Pagos Bait',
+        ];
         $this->typeReportes = ["general" => "Discovery - Tipificaciones Generales", "ventas" => "Discovery - Ventas Unicas", "respondio" => "Respond.io - Historico de Ciclos de vida"];
     }
     public function IndexCMConcentra()
@@ -48,17 +56,29 @@ class UploadsController extends Controller
 
     public function IndexSeguimientosMasivos()
     {
-        return view('bait.uploads.seguimientos');
+        return view('bait.uploads.seguimientos')->with(["tipo" => $this->tipo]);
     }
 
     public function UploadSeguimientosMasivos(Request $request)
     {
+
         try {
-            Excel::import(new SeguimientosBackoffice, $request->file('archivo'));
-            return redirect()->back()->with('successVentas', 'Procesamiento del Archivo completado con éxito');
+            switch ($request->tipo) {
+                case 'seguimientos':
+                    Excel::import(new SeguimientosBackoffice, $request->file('archivo'));
+                    return redirect()->back()->with('successVentas', 'Procesamiento del Archivo completado con éxito');
+                    break;
+                case 'pagos':
+                    Excel::import(new ChangePaymentsBait, $request->file('archivo'));
+                    return redirect()->back()->with('successVentas', 'Procesamiento De pagos realizado con éxito');
+                    break;
+                default:
+                    Excel::import(new SeguimientosBackoffice, $request->file('archivo'));
+                    return redirect()->back()->with('successVentas', 'Procesamiento del Archivo completado con éxito');
+                    break;
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             $failures = $e->failures();
-
             $errors = [];
             foreach ($failures as $failure) {
                 $row = $failure->row();

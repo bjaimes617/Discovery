@@ -52,7 +52,9 @@ class SeguimientosBackoffice implements ToCollection, WithHeadingRow, WithChunkR
                 $backoffice = null;
             }
             // dd(array_search(strtoupper(trim($item['estatus_final'])), $this->estatusfinal));
-            $registroventa = BaitVentas::whereRaw('DATE_FORMAT(created_at, "%d-%m-%Y") = ?', $fechaventa)->where('numero_portar', $item['numero_portabildiad'])->where('idcontacto', '=', trim($item['id_contacto']))->first();
+            $registroventa = BaitVentas::whereRaw('DATE_FORMAT(created_at, "%d-%m-%Y") = ?', $fechaventa)
+                ->where('numero_portar', $item['numero_portabildiad'])
+                ->where('idcontacto', '=', trim($item['id_contacto']))->wherenotIn('estatus_id', [11, 12])->first();
 
             if ($registroventa) {
                 $registroventa->sns                 = strtoupper(trim($item['sns']));
@@ -73,7 +75,7 @@ class SeguimientosBackoffice implements ToCollection, WithHeadingRow, WithChunkR
                 $historico->estatus_backoffice  = $registroventa->estatus_backoffice;
                 $historico->validador_alta      = $registroventa->validador_alta;
                 $historico->bait_concentra_id   = $registroventa->bait_concentra_id;
-                $historico->observaciones       = "Actualizacion de Estatus del Registro de la Venta realizada de forma Masiva.";
+                $historico->observaciones       = "Actualizacion de Estatus del Registro de la Venta realizada de forma Masiva. Concentra:" . strtoupper(trim($item['concentra'])) . " Validador Alta:" . strtoupper(trim($item['validacion_alta']));
                 $historico->save();
             }
         }

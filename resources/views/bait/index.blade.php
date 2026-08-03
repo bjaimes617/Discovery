@@ -90,7 +90,7 @@
                     <div class="kt-separator kt-separator--border-dashed kt-separator--portlet-fit kt-separator--space-lg"></div>
                     <!--begin: Datatable -->                     
                     <div id="ventas-result" style="display:none;" > 
-                        <table class="table text-center table-striped- table-sm table-bordered compact table-hover table-checkable"  id="datatable-ventas">
+                        <table class="table text-center table-striped table-sm table-bordered compact table-hover table-checkable"  id="datatable-ventas">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>   
@@ -103,7 +103,8 @@
                                     <th>Ciclo de Vida</th>
                                     <th>Agente</th> 
                                     <th>Supervisor</th>
-                                    <th>Estatus</th>                                    
+                                    <th>Estatus Discovery</th>                                    
+                                    <th>Estatus Concentra</th>                                    
                                     <th>Acciones</th>
                                 </tr>
                             </thead>

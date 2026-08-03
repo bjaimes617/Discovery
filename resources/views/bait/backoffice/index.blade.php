@@ -79,7 +79,8 @@
                                     <th>Ciclo de Vida</th>
                                     <th>Agente</th> 
                                     <th>Supervisor</th>
-                                    <th>Estatus</th>                                    
+                                    <th>Estatus Discovery</th>   
+                                                                   
                                     <th>Acciones</th>
                                 </tr>
                             </thead>

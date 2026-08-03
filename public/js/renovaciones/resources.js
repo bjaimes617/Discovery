@@ -15,27 +15,23 @@ $.validator.addMethod(
 var KTFormControls = (function () {
     var registroVenta = function () {
         $("#masivaAdd").validate({
-               rules: {
+            rules: {
                 ordenonix: {
                     required: true,
                     remote: {
-                        url: $('input[name="ordenonix"]').data(
-                            "check",
-                        ),
+                        url: $('input[name="ordenonix"]').data("check"),
                         type: "POST",
                         data: {
                             _token: function () {
                                 return $('input[name="_token"]').val();
                             },
                             ordenonix: function () {
-                                return $(
-                                    'input[name="ordenonix"]',
-                                ).val();
+                                return $('input[name="ordenonix"]').val();
                             },
                             idventa: function () {
-                                return $(
-                                    'input[name="ordenonix"]',
-                                ).data("idventa");
+                                return $('input[name="ordenonix"]').data(
+                                    "idventa",
+                                );
                             },
                         },
                         dataFilter: function (data) {
@@ -49,7 +45,7 @@ var KTFormControls = (function () {
                     remote: "El numero de Orden de ONIX ya se encuentra Registrado",
                 },
             },
-            // define validation rules           
+            // define validation rules
             errorElement: "span",
             errorClass: "text-danger",
             //display error alert on form submit
@@ -92,38 +88,37 @@ var KTFormControls = (function () {
                 }
             },
             submitHandler: function (form) {
-                   var inputs = form.querySelectorAll("input, select");
-                    for (var i = 0; i < inputs.length; i++) {
-                        // Verificar si el input está deshabilitado
-                        if (inputs[i].disabled) {
-                            // Cambiar a readonly
-                            inputs[i].disabled = false; // Primero habilitar el input
-                            inputs[i].readOnly = true; // Luego establecerlo como readonly
-                        }
+                var inputs = form.querySelectorAll("input, select");
+                for (var i = 0; i < inputs.length; i++) {
+                    // Verificar si el input está deshabilitado
+                    if (inputs[i].disabled) {
+                        // Cambiar a readonly
+                        inputs[i].disabled = false; // Primero habilitar el input
+                        inputs[i].readOnly = true; // Luego establecerlo como readonly
                     }
-                    button = form.querySelector("button[type='submit']");
-                    button.disabled = true;
-                    form.submit();
+                }
+                button = form.querySelector("button[type='submit']");
+                button.disabled = true;
+                form.submit();
             },
         });
-    };  
+    };
     return {
         // public functions
         init: function () {
             registroVenta();
-        },     
+        },
     };
 })();
 
 var ActiveMap = () => {
-     // Coordenadas iniciales por defecto (ej. Madrid, España)
-   
+    // Coordenadas iniciales por defecto (ej. Madrid, España)
 
     const centroInicial = $("#corddefault").data("cord");
-    const zoominit      = $("#corddefault").data("zoom");
-     console.log(centroInicial,zoominit);
+    const zoominit = $("#corddefault").data("zoom");
+    console.log(centroInicial, zoominit);
     // Inicializar el mapa y la capa base de OpenStreetMap
-    const map = L.map("map").setView(centroInicial,zoominit );
+    const map = L.map("map").setView(centroInicial, zoominit);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 20,
         attribution: "© OpenStreetMap",
@@ -190,10 +185,9 @@ var ActiveMap = () => {
         marker.setLatLng([lat, lng]);
         obtenerDireccionPorCoordenadas(lat, lng);
     });
-}
+};
 
 jQuery(document).ready(function () {
-
     $(document).on("input", ".sinCaracteres", function () {
         this.value = this.value.toUpperCase().replace(/[^A-Z\s]/g, "");
     });
@@ -212,7 +206,7 @@ jQuery(document).ready(function () {
             },
         });
     }
-        
+
     $(".datetimepickerHour").datetimepicker({
         format: "h:mm A",
         icons: {
@@ -242,7 +236,7 @@ jQuery(document).ready(function () {
     });
 
     //activacion validate
-    if($('form#masivaAdd').length > 0){
+    if ($("form#masivaAdd").length > 0) {
         ActiveMap();
         KTFormControls.init();
     }
@@ -291,8 +285,9 @@ $("#renovacionesSearch").validate({
                         { mData: "creado" },
                         { mData: "hora" },
                         { mData: "dn" },
-                        { mData: "nombreapellido" },                     
-                        { mData: "orden" },     
+                        { mData: "nombreapellido" },
+                        { mData: "orden" },
+                        { mData: "tripleta" },
                         { mData: "agente" },
                         { mData: "supervisor" },
                         { mData: "estatus" },
@@ -336,7 +331,6 @@ function DestroyVentas(id) {
         }
     });
 }
-
 
 function CopyText(identificador) {
     //Seleccionamos el data del input con el texto generado

@@ -644,7 +644,7 @@ class UserController extends Controller
         ]);
 
         Excel::import(new ImportUpdateOperadores, request()->file('archivo'));
-        Session::flash('success', 'El archivo fue cargado exitosamente por favor valide los registros.');
+        Session::flash('successImport', 'El archivo fue cargado exitosamente por favor valide los registros.');
         return redirect()->route('user.update.massive');
     }
 

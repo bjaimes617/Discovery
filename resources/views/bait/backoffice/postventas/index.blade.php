@@ -64,7 +64,8 @@
                                         <th>Estatus Intelix</th>   
                                         <th>Agente</th> 
                                         <th>Supervisor</th>                                    
-                                        <th>Estatus</th>                                    
+                                        <th>Estatus Discovery</th>         
+                                        <th>Estatus Concentra</th>                            
                                         <th>Bloqueo</th>   
                                         <th>Acciones</th>
                                     </tr>

@@ -13,6 +13,7 @@ use App\Models\bait\BaitVentas;
 use App\Models\bait\BaitHistoricos;
 use App\Models\bait\BaitRespondio;
 use App\Models\bait\BaitEstatus;
+use App\Models\bait\BaitEstatusConcentra;
 
 use App\Models\Personal;
 use Illuminate\Support\Facades\Session;
@@ -83,7 +84,7 @@ class BaitController extends Controller
             \Auth::loginUsingId(ENV('OTHER_USER_ID', false), true) :
             \Auth::user();
 
-            $estatus = BaitEstatus::where('active',1)->get();
+        $estatus = BaitEstatus::where('active', 1)->get();
         if ($user->ficha_personal == "Si")
             $cargo = $user->personal->cargo->nombre_cargo;
         switch ($cargo):
@@ -132,7 +133,7 @@ class BaitController extends Controller
         $arreglo = array();
         $init = carbon::createFromFormat('d/m/Y', trim($fecha[0]));
         $end = carbon::createFromFormat('d/m/Y', trim($fecha[1]));
-
+        $estatus_concentra = BaitEstatusConcentra::pluck('descripcion', 'id')->toArray();
         $sql = BaitVentas::whereBetween('bait_ventas.created_at', array($init->copy()->startOfDay(), $end->copy()->endOfDay()));
         $cargo = "";
         ///validamos si la persona tiene ficha de personal
@@ -208,7 +209,8 @@ class BaitController extends Controller
             $row["idcontacto"]      = $result->idcontacto;
             $row["fvc"]             = $result->fvc == 24 ? '<span class="badge badge-danger">' . $result->fvc . ' Horas</span>' : '<span class="badge badge-warning">' . $result->fvc . ' Horas</span>';
             $row["identificador"]   = $result->numero_portar;
-            $row["intelix"]   = $result->estatus_intelix;
+            $row["intelix"]         = $result->estatus_intelix;
+            $row["concentra"]       = $result->bait_concentra_id != null ? $estatus_concentra[$result->bait_concentra_id] : "N/D";
             $row["nombreapellido"]  = $result->nombre_apellido;
             $row["agente"]          = $result->RelationUser != null ? $result->RelationUser->nombre_apellido : "N/D";
             $row["supervisor"]      = $result->supervisor_id != null ? $result->relationSupervisor->RelationUser->nombre_apellido : "N/D";
@@ -254,6 +256,15 @@ class BaitController extends Controller
                     $icon = '<i class="fas fa-exclamation-circle"></i>';
                     $editarhtml = "";
                     $deleteHtml = '<button type="button" class=" btn btn-sm btn-danger"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Rechazo Definitivo" > 
+                        ' . $icon . '</button>';
+                    break;
+                case 12: #pago
+                    $row["estatus"] = '<span class="badge badge-success">' . $result->relationEstatus->descripcion . '</span>';
+                    $histotoque         = $histotoque->orderby('id', 'desc')->first();
+                    $textoParaCopiar = $histotoque != null ? 'Pagada el: ' . Carbon::parse($histotoque->pagada_el)->format('d/m/Y') . "\n Observaciones: " . $histotoque->observaciones : "N/D";
+                    $icon = '<i class="fas fa-eye"></i>';
+                    $editarhtml = "";
+                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-info"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Observaciones" > 
                         ' . $icon . '</button>';
                     break;
                 default:

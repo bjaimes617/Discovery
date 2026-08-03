@@ -20,13 +20,13 @@
 </div>
 @endif
 
-@if(Session::has('success'))
+@if(Session::has('successImport'))
 <div class="row">
     <div class="col">
         <div class="alert alert-outline-dark alert-elevate fade show" role="alert">
             <div class="alert-icon"><i class="flaticon2-checkmark kt-font-success"></i></div>
             <div class="alert-text">
-                {{Session::get('success')}}
+                {{Session::get('successImport')}}
             </div>
             <div class="alert-close">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">

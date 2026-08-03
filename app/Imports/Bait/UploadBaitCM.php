@@ -123,7 +123,7 @@ class UploadBaitCM implements ToCollection, WithHeadingRow, WithChunkReading
                     ];
                 } else if ($registro["port_in"] == 0 && $registro["uso"] == 0) {
                     $estatusxasignar = [
-                        "concentra" => 1, #alta
+                        "concentra" => 3, #Exitosa
                         "sns"       => $this->sns[1], #walmart
                         "intelix"   => $this->estatusintelix[9], #Alta
                         "bo"        => $this->validatebo[3], #PENDIENTE
@@ -132,7 +132,7 @@ class UploadBaitCM implements ToCollection, WithHeadingRow, WithChunkReading
                     ];
                 } else if ($registro["port_in"] == 1 && $registro["uso"] == 0) {
                     $estatusxasignar = [
-                        "concentra" => 1, #alta
+                        "concentra" => 5, #FVC
                         "sns"       => $this->sns[1], #walmart
                         "intelix"   => $this->estatusintelix[9], #Alta
                         "bo"        => $this->validatebo[0], #alta

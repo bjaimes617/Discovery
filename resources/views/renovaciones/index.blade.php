@@ -85,6 +85,7 @@
                                     <th>DN</th>                                 
                                     <th>Nombre y Apellido</th>
                                     <th>Orden Onix</th>
+                                    <th>Tripleta</th>
                                     <th>Agente</th> 
                                     <th>Supervisor</th>
                                     <th>Estatus</th>                                    
