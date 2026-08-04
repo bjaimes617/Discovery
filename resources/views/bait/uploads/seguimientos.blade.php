@@ -34,7 +34,7 @@
                         <a class="kt-link kt-font-bold"
                             href="{{ Storage::disk('public')->url('formato_seguimientos_bait.xlsx') }}">Presione
                             Aqu&iacute;</a>
-                        @if (!Auth::user()->hasPermission('bait.cargador.payments'))
+                        @if (Auth::user()->hasPermission('bait.cargador.payments'))
                             <br>
                             Descargue el archivo de ejemplo para <span style="color:red; font-weight: bold;">Cargar los
                                 Pagos </span><a class="kt-link kt-font-bold"
@@ -63,6 +63,7 @@
                     enctype="multipart/form-data">
                     @csrf
                     <div class="row">
+                        @if (Auth::user()->hasPermission('bait.cargador.payments'))
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label>Seleccione el tipo de carga</label>
@@ -74,6 +75,7 @@
                                 </select>
                             </div>
                         </div>
+                        @endif
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label>Seleccione el Archivo de Carga</label>
