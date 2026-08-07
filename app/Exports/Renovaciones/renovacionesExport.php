@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class renovacionesExport implements ShouldAutoSize, FromCollection, WithHeadings, WithMapping, WithChunkReading
 {
-     protected $datos, $activeHistorico;
+    protected $datos, $activeHistorico;
 
     public function __construct($datos, $activeHistorico)
     {
@@ -34,31 +34,33 @@ class renovacionesExport implements ShouldAutoSize, FromCollection, WithHeadings
     public function headings(): array
     {
         $cabezera = [
-                'Fecha y Hora',
-                'Nombre del Ejecutivo',
-                'Cedula del Ejecutivo',
-                'DN',
-                'Nombre del Cliente',
-                'Equipo',
-                'Plazo',
-                'Entrega en',
-                'N° de Orden Onix (Magento)',
-                'Usuario de Conexión',
-                'Precio del Equipo',
-                'Dirección de Entrega',
-                'Entre Calles',
-                'Referencias',
-                'Fecha',
-                'Semana',
-                'Nombre del Ejecutivo',
-                'Cedula del Ejecutivo',
-                'Intervalo',
-                'Estatus',
-                'Observaciones',
-                'Latitud Direccion',
-                'Longitud Direccion',
+            'Fecha y Hora',
+            'Nombre del Ejecutivo',
+            'Cedula del Ejecutivo',
+            'DN',
+            'Nombre del Cliente',
+            'Equipo',
+            'Plazo',
+            'Entrega en',
+            'N° de Orden Onix (Magento)',
+            'Usuario de Conexión',
+            'Precio del Equipo',
+            'Dirección de Entrega',
+            'Entre Calles',
+            'Referencias',
+            'Fecha',
+            'Semana',
+            'Nombre del Ejecutivo',
+            'Cedula del Ejecutivo',
+            'Intervalo',
+            'Pagable',
+            'Fecha del Pago',
+            'Estatus',
+            'Observaciones',
+            'Latitud Direccion',
+            'Longitud Direccion',
         ];
-        if($this->activeHistorico){
+        if ($this->activeHistorico) {
             $historico = [
                 'usuario',
                 'Estatus',
@@ -69,48 +71,48 @@ class renovacionesExport implements ShouldAutoSize, FromCollection, WithHeadings
                 'plan_anterior',
                 'plan_actual',
                 'monto_plan_anterior',
-                'monto_plan_actual',                
+                'monto_plan_actual',
             ];
             $TotalCabecera = array_merge($cabezera, $historico);
         } else {
             $TotalCabecera = $cabezera;
-        }      
+        }
         return $TotalCabecera;
     }
 
-     public function prepareRows($datos): array
+    public function prepareRows($datos): array
     {
         return $datos;
     }
 
-     public function map($row): array
+    public function map($row): array
     {
-          $estatuses = renovacionesEstatusModel::all()->pluck('descripcion', 'id')->toArray();
-          $observaciones = renovacionesObservacionesModel::all()->pluck('descripcion', 'id')->toArray();
-          $venta = $row['venta'];
-          $historico = $row['historico'];
-            // 1. Creas la instancia de Carbon con tu fecha
-            $fechaVenta = Carbon::create($venta->created_at);
+        $estatuses = renovacionesEstatusModel::all()->pluck('descripcion', 'id')->toArray();
+        $observaciones = renovacionesObservacionesModel::all()->pluck('descripcion', 'id')->toArray();
+        $venta = $row['venta'];
+        $historico = $row['historico'];
+        // 1. Creas la instancia de Carbon con tu fecha
+        $fechaVenta = Carbon::create($venta->created_at);
 
-            // 2. Obtienes la hora de inicio (ej. 13:00:00)
-            $inicioIntervalo = $fechaVenta->copy()->startOfHour();
+        // 2. Obtienes la hora de inicio (ej. 13:00:00)
+        $inicioIntervalo = $fechaVenta->copy()->startOfHour();
 
-            // 3. Obtienes la hora de fin (ej. 14:00:00)
-            $finIntervalo = $inicioIntervalo->copy()->addHour();
+        // 3. Obtienes la hora de fin (ej. 14:00:00)
+        $finIntervalo = $inicioIntervalo->copy()->addHour();
 
-            // 4. Formateas el resultado como lo necesites (ej. "13:00 - 14:00")
-            $intervaloTexto = $inicioIntervalo->format('H:i') . ' a ' . $finIntervalo->format('H:i'); 
+        // 4. Formateas el resultado como lo necesites (ej. "13:00 - 14:00")
+        $intervaloTexto = $inicioIntervalo->format('H:i') . ' a ' . $finIntervalo->format('H:i');
         return [
             Carbon::create($venta->created_at)->format('d/m/Y H:i:s'),
             strtoupper($venta->RelationUser->nombre_apellido),
-            $venta->RelationPersonal != null ? $venta->RelationPersonal->numero_empleado: null,
+            $venta->RelationPersonal != null ? $venta->RelationPersonal->numero_empleado : null,
             $venta->dn,
             $venta->nombre_cliente,
-            strtoupper($venta->equipo),     
-            $venta->plazo." Meses",
+            strtoupper($venta->equipo),
+            $venta->plazo . " Meses",
             $venta->entrega_en,
             $venta->numero_orden_onix,
-            $venta->RelationPersonal != null ? $venta->RelationPersonal->in_telefonico: null,
+            $venta->RelationPersonal != null ? $venta->RelationPersonal->in_telefonico : null,
             number_format($venta->precio_equipo, 2),
             $venta->direccion_entrega,
             $venta->entre_calles,
@@ -118,8 +120,10 @@ class renovacionesExport implements ShouldAutoSize, FromCollection, WithHeadings
             Carbon::parse($venta->created_at)->format('d/m/Y'),
             Carbon::parse($venta->created_at)->weekOfYear,
             strtoupper($venta->RelationUser->nombre_apellido),
-            $venta->RelationPersonal != null ? $venta->RelationPersonal->numero_empleado: null,
+            $venta->RelationPersonal != null ? $venta->RelationPersonal->numero_empleado : null,
             $intervaloTexto,
+            $venta->pagable == 1 ? "Aplicable" : ($venta->pagable == 0 ? "No Aplicable" : "Pendiente"),
+            $venta->pagada_el !== null ? Carbon::parse($venta->pagada_el)->format('d/m/Y') : "",
             $estatuses[$venta->estatus_id],
             $venta->observaciones_id != null ? $observaciones[$venta->observaciones_id] : null,
             $venta->latitud,
@@ -134,13 +138,13 @@ class renovacionesExport implements ShouldAutoSize, FromCollection, WithHeadings
             $historico && $historico->plan_actual ? $historico->plan_actual : "",
             $historico && $historico->monto_plan_anterior ? $historico->monto_plan_anterior : "",
             $historico && $historico->monto_plan_actual ? $historico->monto_plan_actual : "",
-         ];
+        ];
     }
 
     public function collection()
     {
         $rows = collect();
-       if ($this->activeHistorico) {
+        if ($this->activeHistorico) {
             foreach ($this->datos as $venta) {
                 if ($venta->relationHistorico && $venta->relationHistorico->count() > 0) {
                     foreach ($venta->relationHistorico as $historico) {

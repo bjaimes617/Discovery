@@ -290,6 +290,7 @@ $("#renovacionesSearch").validate({
                         { mData: "tripleta" },
                         { mData: "agente" },
                         { mData: "supervisor" },
+                        { mData: "pagable" },
                         { mData: "estatus" },
                         { mData: "acciones" },
                     ],

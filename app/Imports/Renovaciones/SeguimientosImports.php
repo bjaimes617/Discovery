@@ -52,11 +52,12 @@ class SeguimientosImports implements ToCollection, WithChunkReading, WithHeading
                 $observaciones = $seguimiento["observaciones"] != null ?
                     renovacionesEstatusModel::find($estatus)->RelationObservationes()->where('descripcion', strtoupper($seguimiento["observaciones"]))->first()->id :
                     null;
-
+                $pagable = $this->EvaluarIndicadordePagos($seguimiento);
                 $Update[] = [
                     "id"                => $ventas[$seguimiento["orden_onix"]],
                     "estatus_id"        => $estatus,
                     "observaciones_id"  => $observaciones,
+                    "pagable"           => $pagable,
                     'onix'              => $seguimiento["orden_onix"],
                     'llamada_bo'        => $seguimiento["llamada_bo"]       != null ? strtoupper($seguimiento["llamada_bo"]) : null,
                     'plan_anterior'     => $seguimiento["plan_anterior"]    != null ? strtoupper($seguimiento["plan_anterior"]) : null,
@@ -71,6 +72,7 @@ class SeguimientosImports implements ToCollection, WithChunkReading, WithHeading
                     "renovaciones_ventas_id" => $ventas[$seguimiento["orden_onix"]],
                     "estatus_id"        => $estatus,
                     "observaciones_id"  => $observaciones,
+                    "pagable"           => $pagable,
                     "llamada_bo"        => $seguimiento["llamada_bo"] != null ? strtoupper($seguimiento["llamada_bo"]) : null,
                     "plan_anterior"     => $seguimiento["plan_anterior"] != null ? strtoupper($seguimiento["plan_anterior"]) : null,
                     "plan_actual"       => $seguimiento["plan_actual"] != null ? strtoupper($seguimiento["plan_actual"]) : null,
@@ -112,6 +114,15 @@ class SeguimientosImports implements ToCollection, WithChunkReading, WithHeading
         }
 
         return true;
+    }
+
+    private function EvaluarIndicadordePagos($seguimiento)
+    {
+        if ($seguimiento["plan_actual"] >= $seguimiento["plan_anterior"] && strtolower(trim($seguimiento["tripleta"])) == "cargada") {
+            return 0; //pagada
+        } else {
+            return 1; // no pagada
+        }
     }
 
     public function rules(): array

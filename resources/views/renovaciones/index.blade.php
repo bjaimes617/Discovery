@@ -88,6 +88,7 @@
                                     <th>Tripleta</th>
                                     <th>Agente</th> 
                                     <th>Supervisor</th>
+                                    <th>pagable</th>         
                                     <th>Estatus</th>                                    
                                     <th>Acciones</th>
                                 </tr>

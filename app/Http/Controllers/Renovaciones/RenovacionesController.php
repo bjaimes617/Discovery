@@ -189,6 +189,18 @@ class RenovacionesController extends Controller
                     $tripleta =  $result->tripleta;
                     break;
             }
+
+            switch ($result->pagable) {
+                case "0":
+                    $row["pagable"] = '<span class="badge badge-success" data-toggle="tooltip" data-placement="top" title="Aplicable" ><i class="fas fa-check"></i></span>';
+                    break;
+                case "1":
+                    $row["pagable"] = '<span class="badge badge-danger" data-toggle="tooltip" data-placement="top" title="No Aplicable" ><i class="fas fa-times"></i></span>';
+                    break;
+                case NULL:
+                    $row["pagable"] = '<span class="badge badge-warning" data-toggle="tooltip" data-placement="top" title="Pendiente" ><i class="fas fa-exclamation-triangle"></i></span>';
+                    break;
+            }
             $row["tripleta"]        = $tripleta;
             $row["dn"]              = $result->dn;
             $row["nombreapellido"]  = $result->nombre_cliente;
@@ -207,7 +219,7 @@ class RenovacionesController extends Controller
                         '<button type="button"  ' . $vent . ' class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="top" title="Remover" ><i class="fa fa-trash"</i></button>'
                         : null;
                     break;
-                case 11:
+                case 11: //Pagada
                     $row["estatus"] = '<span class="badge badge-success">' . $result->relationEstatus->descripcion . '</span>';
 
                     $histotoque         = $histotoque->orderby('id', 'desc')->first();
@@ -223,7 +235,7 @@ class RenovacionesController extends Controller
                     $textoParaCopiar = $histotoque != null ? 'Gestionado por: ' . $histotoque->usuario . "\n Comentarios: " . $histotoque->observaciones . "\n Observacion: " . $histotoque->relationObservaciones->descripcion : "N/D";
                     $icon = '<i class="fas fa-info-circle"></i>';
                     $editarhtml = "";
-                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-warning"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
+                    $deleteHtml = '<button type="button" class=" btn btn-sm btn-info"  data-text="' . $textoParaCopiar . '"  id="button' . $result->id . '" onclick="CopyText(' . $result->id . ');" data-estatus="' . $result->estatus_id . '" data-toggle="tooltip" data-placement="top" title="Informacion de la Venta" > 
                         ' . $icon . '</button>';
                     break;
             }
