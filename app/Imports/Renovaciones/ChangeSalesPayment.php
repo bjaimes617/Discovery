@@ -50,6 +50,7 @@ class ChangeSalesPayment implements ToCollection, WithHeadingRow, WithValidation
                 $Update[] = [
                     "id"                  => $ventas[$seguimiento["dn"]],
                     "estatus_id"          => $estatus,
+                    "pagable" => 0,
                     'pagada_el'           => Date::excelToDateTimeObject(trim($seguimiento["pagada_el"]))->format('Y-m-d'),
                     'updated_at'          => Carbon::now()
                 ];
@@ -58,8 +59,9 @@ class ChangeSalesPayment implements ToCollection, WithHeadingRow, WithValidation
                     "renovaciones_ventas_id" => $ventas[$seguimiento["dn"]],
                     "estatus_id"        => $estatus,
                     "pagada_el"         => Date::excelToDateTimeObject(trim($seguimiento["pagada_el"]))->format('Y-m-d'),
-                    "observaciones"     => "REgistro de Pago realizado el: " . Carbon::now() . " | Observaciones: " . $observaciones,
+                    "observaciones"     => "Registro de Pago realizado el: " . Carbon::now() . " | Observaciones: " . $observaciones,
                     "usuario"           => Auth::user()->nombre_apellido,
+                    "pagable"           => 0,
                     "created_at"        => Carbon::now(),
                     "updated_at"        => Carbon::now()
                 ];
@@ -70,6 +72,7 @@ class ChangeSalesPayment implements ToCollection, WithHeadingRow, WithValidation
             foreach ($Update as $venta) {
                 renovacionesVentasModel::where('id', $venta['id'])->update([
                     "estatus_id"        => $venta['estatus_id'],
+                    "pagable"           => $venta['pagable'],
                     "pagada_el"         => $venta['pagada_el'],
                     "updated_at"        => $venta['updated_at']
                 ]);

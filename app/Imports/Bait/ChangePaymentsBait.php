@@ -27,7 +27,7 @@ class ChangePaymentsBait implements ToCollection, WithHeadingRow, WithValidation
     }
     public function collection(Collection $collection)
     {
-        $portabilidad = $collection->pluck('numero_portabilidad')->toArray();
+        $portabilidad = $collection->pluck('dn')->toArray();
 
         $ventas = BaitVentas::whereIn('numero_portar', $portabilidad)
             ->where('estatus_id', '!=', 12)
@@ -38,19 +38,19 @@ class ChangePaymentsBait implements ToCollection, WithHeadingRow, WithValidation
         $insertHistorico = array();
 
         foreach ($collection as $seguimiento) {
-            if (isset($ventas[$seguimiento["numero_portabilidad"]])) {
+            if (isset($ventas[$seguimiento["dn"]])) {
                 $estatus = 12;
                 $observaciones =  "Venta Paga el al Agente: " . Date::excelToDateTimeObject(trim($seguimiento["fecha_de_pago"]))->format('Y-m-d');
 
                 $Update[] = [
-                    "id"                  => $ventas[$seguimiento["numero_portabilidad"]],
+                    "id"                  => $ventas[$seguimiento["dn"]],
                     "estatus_id"          => $estatus,
                     'pagada_el'           => Date::excelToDateTimeObject(trim($seguimiento["fecha_de_pago"]))->format('Y-m-d'),
                     'updated_at'          => Carbon::now()
                 ];
 
                 $insertHistorico[] = [
-                    "bait_ventas_id" => $ventas[$seguimiento["numero_portabilidad"]],
+                    "bait_ventas_id" => $ventas[$seguimiento["dn"]],
                     "estatus_id"        => $estatus,
                     "pagada_el"         => Date::excelToDateTimeObject(trim($seguimiento["fecha_de_pago"]))->format('Y-m-d'),
                     "observaciones"     => "Registro de Pago realizado el: " . Carbon::now() . " | Observaciones: " . $observaciones,
